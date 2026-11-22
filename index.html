@@ -151,6 +151,23 @@
   .lock input:focus{box-shadow:inset 0 0 0 2px var(--cyan)}
   .lock button{margin-top:14px;width:100%;padding:13px;border:0;border-radius:14px;font-family:var(--head);font-size:14px;cursor:pointer;background:var(--pink);color:var(--bg);box-shadow:0 0 16px rgba(255,79,163,.8)}
   .lock .msg{min-height:18px;margin-top:10px;font-size:13px;color:var(--yellow2)}
+  .foot-right{display:flex;align-items:center;gap:8px}
+  .photo-btn{border:0;cursor:pointer;height:44px;padding:0 14px;border-radius:14px;display:inline-flex;align-items:center;gap:8px;font:700 13px var(--body);background:rgba(45,226,255,.12);color:var(--cyan2);box-shadow:inset 0 0 0 2px var(--cyan),0 0 12px rgba(45,226,255,.35)}
+  .photo-btn:active{transform:scale(.95)}
+  .photo-btn:disabled{opacity:.4}
+  .previews{display:none;gap:10px;padding:4px 18px 8px;flex-wrap:wrap}
+  .previews.on{display:flex}
+  .pv{position:relative;width:72px;height:72px;border-radius:12px;overflow:hidden;box-shadow:0 0 0 2px var(--cyan),0 0 14px rgba(45,226,255,.45);animation:pop .4s cubic-bezier(.2,1.4,.4,1) both}
+  .pv img{width:100%;height:100%;object-fit:cover;display:block}
+  .pv button{position:absolute;top:3px;right:3px;width:24px;height:24px;border:0;border-radius:8px;cursor:pointer;background:rgba(11,6,32,.85);color:#fff;font:700 13px var(--body);line-height:24px;padding:0}
+  .pv.busy{display:grid;place-items:center;background:rgba(11,6,32,.8);color:var(--cyan2);font-size:11px}
+  .thumbs{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+  .thumbs img{width:64px;height:64px;object-fit:cover;border-radius:10px;cursor:zoom-in;box-shadow:0 0 0 2px rgba(242,236,255,.25)}
+  .card.open .thumbs img{width:calc(50% - 4px);height:auto;max-height:260px;aspect-ratio:1/1}
+  .lb{position:fixed;inset:0;z-index:30;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(8,4,24,.92);cursor:zoom-out}
+  .lb.on{display:flex;animation:fade .25s ease}
+  .lb img{max-width:100%;max-height:88vh;border-radius:14px;box-shadow:0 0 0 2px var(--cyan),0 0 40px rgba(45,226,255,.5)}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
   .state{text-align:center;color:var(--muted);padding:40px 16px;font-size:15px;line-height:1.5}
   .btn{border:0;border-radius:12px;padding:8px 14px;font:700 14px var(--body);cursor:pointer;background:var(--cyan);color:var(--bg)}
 
@@ -187,8 +204,13 @@
     <div class="panel">
       <label class="sr" for="text">Ta note</label>
       <textarea id="text" placeholder="Tape ta note ici…"></textarea>
+      <div class="previews" id="previews"></div>
       <div class="foot">
         <span id="count">Brouillon gardé automatiquement</span>
+        <div class="foot-right">
+          <input type="file" id="photoInput" accept="image/*" multiple hidden>
+          <button class="photo-btn" id="photoBtn" type="button" aria-label="Ajouter une photo"><svg width="24" height="20" viewBox="0 0 10 8" shape-rendering="crispEdges" aria-hidden="true"><rect x="3" y="0" width="1" height="1" fill="currentColor"/><rect x="4" y="0" width="1" height="1" fill="currentColor"/><rect x="5" y="0" width="1" height="1" fill="currentColor"/><rect x="6" y="0" width="1" height="1" fill="currentColor"/><rect x="0" y="1" width="1" height="1" fill="currentColor"/><rect x="1" y="1" width="1" height="1" fill="currentColor"/><rect x="2" y="1" width="1" height="1" fill="currentColor"/><rect x="3" y="1" width="1" height="1" fill="currentColor"/><rect x="4" y="1" width="1" height="1" fill="currentColor"/><rect x="5" y="1" width="1" height="1" fill="currentColor"/><rect x="6" y="1" width="1" height="1" fill="currentColor"/><rect x="7" y="1" width="1" height="1" fill="currentColor"/><rect x="8" y="1" width="1" height="1" fill="currentColor"/><rect x="9" y="1" width="1" height="1" fill="currentColor"/><rect x="0" y="2" width="1" height="1" fill="currentColor"/><rect x="9" y="2" width="1" height="1" fill="currentColor"/><rect x="0" y="3" width="1" height="1" fill="currentColor"/><rect x="3" y="3" width="1" height="1" fill="currentColor"/><rect x="4" y="3" width="1" height="1" fill="currentColor"/><rect x="5" y="3" width="1" height="1" fill="currentColor"/><rect x="6" y="3" width="1" height="1" fill="currentColor"/><rect x="9" y="3" width="1" height="1" fill="currentColor"/><rect x="0" y="4" width="1" height="1" fill="currentColor"/><rect x="3" y="4" width="1" height="1" fill="currentColor"/><rect x="6" y="4" width="1" height="1" fill="currentColor"/><rect x="9" y="4" width="1" height="1" fill="currentColor"/><rect x="0" y="5" width="1" height="1" fill="currentColor"/><rect x="3" y="5" width="1" height="1" fill="currentColor"/><rect x="4" y="5" width="1" height="1" fill="currentColor"/><rect x="5" y="5" width="1" height="1" fill="currentColor"/><rect x="6" y="5" width="1" height="1" fill="currentColor"/><rect x="9" y="5" width="1" height="1" fill="currentColor"/><rect x="0" y="6" width="1" height="1" fill="currentColor"/><rect x="9" y="6" width="1" height="1" fill="currentColor"/><rect x="0" y="7" width="1" height="1" fill="currentColor"/><rect x="1" y="7" width="1" height="1" fill="currentColor"/><rect x="2" y="7" width="1" height="1" fill="currentColor"/><rect x="3" y="7" width="1" height="1" fill="currentColor"/><rect x="4" y="7" width="1" height="1" fill="currentColor"/><rect x="5" y="7" width="1" height="1" fill="currentColor"/><rect x="6" y="7" width="1" height="1" fill="currentColor"/><rect x="7" y="7" width="1" height="1" fill="currentColor"/><rect x="8" y="7" width="1" height="1" fill="currentColor"/><rect x="9" y="7" width="1" height="1" fill="currentColor"/></svg><span>Photo</span></button>
+        </div>
       </div>
     </div>
     <p class="hint">» Choisis ton canal «</p>
@@ -220,6 +242,7 @@
     <div class="msg" id="lockMsg"></div>
   </form>
 </div>
+<div class="lb" id="lb" role="dialog" aria-label="Photo en grand"><img id="lbImg" alt=""></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <div class="mini" id="mini" role="status" aria-live="polite"></div>
 
@@ -255,6 +278,9 @@
     del(k){ try { localStorage.removeItem(k); } catch {} }
   };
   let code = store.get("journal.code") || "";
+  const MAX_PHOTOS = 3;
+  let photos = [];        // photos en attente : { data: dataURL }
+  let photoRetry = false; // un seul rechargement si une photo a expiré
   let notes = store.get("journal.cache") || [];
   let lastSync = store.get("journal.cacheAt");
   let filter = "Tout", query = "", tagFilter = "", loading = false, loadedOnce = false, tagsOn = true;
@@ -337,6 +363,48 @@
   function mini(html){ const m=$("#mini"); m.innerHTML=html; m.classList.remove("on"); void m.offsetWidth; m.classList.add("on"); clearTimeout(miniT); miniT=setTimeout(()=>m.classList.remove("on"),3200); }
   function banner(msg){ const b=$("#banner"); b.innerHTML = msg || ""; b.classList.toggle("on", !!msg); }
 
+  function saveCache(){
+    store.set("journal.cache", notes.map(n => Object.assign({}, n, { photos: (n.photos || []).filter(u => !String(u).startsWith("data:")) })));
+  }
+
+  // ---------- Photos ----------
+  function readAsDataURL(blob){ return new Promise((ok, ko) => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = ko; r.readAsDataURL(blob); }); }
+  async function loadImage(file){
+    if (window.createImageBitmap) { try { return await createImageBitmap(file, { imageOrientation: "from-image" }); } catch {} }
+    return await new Promise((ok, ko) => { const img = new Image(); img.onload = () => ok(img); img.onerror = ko; img.src = URL.createObjectURL(file); });
+  }
+  async function compress(file){
+    const img = await loadImage(file);
+    const w = img.width, h = img.height, max = 1600, k = Math.min(1, max / Math.max(w, h));
+    const c = document.createElement("canvas"); c.width = Math.round(w * k); c.height = Math.round(h * k);
+    c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+    let q = 0.82, blob;
+    do { blob = await new Promise(r => c.toBlob(r, "image/jpeg", q)); q -= 0.12; } while (blob && blob.size > 1.5 * 1024 * 1024 && q > 0.4);
+    return await readAsDataURL(blob);
+  }
+  function renderPreviews(busy){
+    const box = $("#previews");
+    box.innerHTML = photos.map((p, i) => `<div class="pv"><img src="${p.data}" alt="Photo ${i + 1}"><button type="button" data-rm="${i}" aria-label="Retirer la photo">✕</button></div>`).join("")
+      + (busy ? `<div class="pv busy">…</div>` : "");
+    box.classList.toggle("on", photos.length > 0 || !!busy);
+    box.querySelectorAll("[data-rm]").forEach(b => b.onclick = () => { photos.splice(+b.dataset.rm, 1); renderPreviews(); });
+    $("#photoBtn").disabled = photos.length >= MAX_PHOTOS;
+  }
+  $("#photoBtn").addEventListener("click", () => $("#photoInput").click());
+  $("#photoInput").addEventListener("change", async e => {
+    const files = [...e.target.files].slice(0, MAX_PHOTOS - photos.length);
+    e.target.value = "";
+    for (const f of files) {
+      renderPreviews(true);
+      try { photos.push({ data: await compress(f) }); }
+      catch { toast("<span>Impossible de lire cette photo</span>"); }
+    }
+    renderPreviews();
+  });
+  function openPhoto(src){ $("#lbImg").src = src; $("#lb").classList.add("on"); }
+  $("#lb").addEventListener("click", () => $("#lb").classList.remove("on"));
+  function photoBroken(){ if (photoRetry) return; photoRetry = true; load(true); }
+
   // ---------- Série de jours ----------
   function dayKey(d){ return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate(); }
   function updateStreak(){
@@ -361,7 +429,7 @@
       if (r.disabled) return;
       if (r.tags && r.tags.length) {
         note.tags = r.tags; note.fresh = true;
-        store.set("journal.cache", notes);
+        saveCache();
         mini(r.tags.map(x => "#" + esc(x)).join(" ") + " ✓");
       }
     } catch { mini("Hashtags non ajoutés cette fois-ci"); }
@@ -371,22 +439,25 @@
   // ---------- Enregistrer ----------
   async function save(cat, btn){
     const body = text.value.trim();
-    if (!body) { toast("<span>Écris quelque chose d'abord</span>"); text.focus(); return; }
+    if (!body && !photos.length) { toast("<span>Écris quelque chose ou ajoute une photo</span>"); text.focus(); return; }
     if (!code) { lock(); return; }
     document.querySelectorAll(".cat").forEach(b => b.disabled = true);
     btn.classList.add("saving");
     try {
-      const r = await api("POST", "/notes", { text: body, cat });
+      const sent = photos.slice();
+      const r = await api("POST", "/notes", { text: body, cat, photos: sent.map(p => ({ type: "image/jpeg", data: p.data })) });
       const note = Object.assign(r.note || {}, { full: body, tags: [] });
       if (!note.excerpt) note.excerpt = body.slice(0, EXCERPT_MAX);
+      if (sent.length) note.photos = sent.map(p => p.data);
+      photos = []; renderPreviews();
       if (!note.title) note.title = body.split("\n")[0].slice(0, 60);
       notes.unshift(note);
-      store.set("journal.cache", notes);
+      saveCache();
       text.value = ""; store.set("journal.draft", ""); updateCount(); updateStreak();
       banner("");
       toast('<span style="color:' + ({Perso:"#ff6fb5",Famille:"#ffe86b",Pro:"#7ff3ff"})[cat] + '">' + ICON[cat.toUpperCase()] + "</span><span>Note rangée dans " + cat + " !</span>"
-        + (tagsOn ? '<span style="font-size:12px;color:#ffe86b">Recherche de hashtags…</span>' : ""));
-      autoTag(note, body, cat);
+        + (tagsOn && body ? '<span style="font-size:12px;color:#ffe86b">Recherche de hashtags…</span>' : ""));
+      if (body) autoTag(note, body, cat);
     } catch (err) {
       if (err.status !== 401) banner(esc(explain(err)) + (err.code === "network" || err.status >= 500 ? "<br>Vérifie dans Notion que la note n'a pas déjà été créée avant de réessayer." : ""));
     } finally {
@@ -405,8 +476,8 @@
       const r = await api("GET", "/notes");
       notes = (r.notes || []).sort((a, b) => (Date.parse(b.date) || 0) - (Date.parse(a.date) || 0));
       lastSync = Date.now();
-      store.set("journal.cache", notes); store.set("journal.cacheAt", lastSync);
-      loadedOnce = true; banner(""); updateStreak();
+      saveCache(); store.set("journal.cacheAt", lastSync);
+      loadedOnce = true; banner(""); updateStreak(); setTimeout(() => { photoRetry = false; }, 30000);
     } catch (err) {
       if (err.status !== 401) {
         banner(esc(explain(err)) + ' <button class="btn" id="retry">Réessayer</button>');
@@ -430,7 +501,7 @@
     try {
       await api("DELETE", "/notes/" + note.id);
       el.classList.add("gone");
-      setTimeout(() => { notes = notes.filter(n => n !== note); store.set("journal.cache", notes); updateStreak(); render(); }, 480);
+      setTimeout(() => { notes = notes.filter(n => n !== note); saveCache(); updateStreak(); render(); }, 480);
       mini("Note envoyée à la corbeille Notion");
     } catch (err) {
       btn.disabled = false; btn.textContent = "Oui, supprimer";
@@ -476,6 +547,7 @@
         <div class="card-body">
           <div class="meta">${esc(n.cat || "Sans catégorie")} · ${esc(fmtDate(n.date))}</div>
           <p class="text">${esc(n.full || n.excerpt || n.title)}</p>
+          ${(n.photos && n.photos.length) ? `<div class="thumbs">${n.photos.map(u => `<img src="${esc(u)}" alt="Photo de la note" loading="lazy">`).join("")}</div>` : ""}
           ${(n.tags && n.tags.length) ? `<div class="tags">${n.tags.map(x => `<button class="tag ${x===tagFilter?"on":""} ${n.fresh?"new":""}" data-tag="${esc(x)}">#${esc(x)}</button>`).join("")}</div>` : ""}
           ${tagging.has(n.id) ? `<span class="tagging"><i></i>Hashtags en cours…</span>` : ""}
           <div class="actions">${n.url ? `<a class="link" href="${esc(n.url)}" target="_blank" rel="noopener">Ouvrir dans Notion ↗</a>` : ""}<button class="del" type="button">${TRASH}Supprimer</button></div>
@@ -487,6 +559,8 @@
     $("#list").innerHTML = html;
     $("#list").querySelectorAll(".card").forEach(el => el.addEventListener("click", e => {
       const note = notes[+el.dataset.i];
+      const im = e.target.closest(".thumbs img");
+      if (im) { openPhoto(im.src); return; }
       if (e.target.closest(".del")) { el.classList.add("asking"); return; }
       if (e.target.closest(".no")) { el.classList.remove("asking"); return; }
       if (e.target.closest(".yes")) { removeNote(note, el, e.target.closest(".yes")); return; }
@@ -495,6 +569,7 @@
       if (tg) { setTag(tg.dataset.tag); return; }
       if (!e.target.closest("a")) expand(note, el);
     }));
+    $("#list").querySelectorAll(".thumbs img").forEach(img => img.addEventListener("error", photoBroken, { once: true }));
     notes.forEach(n => n.fresh = false);
   }
   $("#search").addEventListener("input", e => { query = e.target.value; render(); });
