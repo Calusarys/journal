@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Mon Journal">
+<meta name="theme-color" content="#0b0620">
+<link rel="icon" type="image/png" href="icon-64.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Mon Journal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0b0620; --glass:rgba(11,6,32,.8); --ink:#f2ecff; --muted:#a99bd6;
+    --pink:#ff4fa3; --pink2:#ff6fb5; --cyan:#2de2ff; --cyan2:#7ff3ff; --yellow:#ffd23f; --yellow2:#ffe86b;
+    --head:'Silkscreen',monospace; --body:'Space Grotesk',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);-webkit-font-smoothing:antialiased}
+  body{min-height:100dvh}
+  .scene{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+  .scene img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;image-rendering:pixelated}
+  .veil{position:absolute;inset:0;background:rgba(8,4,24,.15);transition:background .5s ease}
+  body.hist .veil{background:rgba(8,4,24,.58)}
+  @media (min-width:700px){ .veil{background:rgba(8,4,24,.45)} }
+  .rain{position:absolute;inset:-80px 0 0 0;background-image:repeating-linear-gradient(100deg,transparent 0 18px,rgba(170,200,255,.28) 18px 19px,transparent 19px 38px);background-size:38px 80px;animation:rain .55s linear infinite;opacity:.7}
+  .rain.r2{background-size:23px 60px;animation-duration:.8s;opacity:.4}
+  @keyframes rain{from{background-position:0 0}to{background-position:-40px 160px}}
+  .drone{position:absolute;top:18vh;left:-40px;display:flex;align-items:center;gap:3px;animation:drone 11s linear infinite}
+  .drone i{display:block;width:14px;height:5px;background:#a9b4e8}
+  .drone b{display:block;width:4px;height:4px;background:var(--pink);box-shadow:0 0 8px var(--pink);animation:tw 1s steps(2) infinite}
+  @keyframes drone{from{transform:translateX(0)}to{transform:translateX(calc(100vw + 80px))}}
+  @keyframes tw{50%{opacity:.2}}
+  @keyframes flicker{0%,18%,22%,62%,64%,100%{opacity:1}20%,63%{opacity:.35}}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+  @keyframes blink{0%,92%,100%{opacity:1}94%,98%{opacity:0}}
+  @keyframes pop{0%{transform:scale(.6) translateY(10px);opacity:0}60%{transform:scale(1.06)}100%{transform:scale(1);opacity:1}}
+  @keyframes rise{from{transform:translateY(14px);opacity:0}to{transform:none;opacity:1}}
+  @keyframes neonOn{0%{opacity:.2}10%{opacity:1}14%{opacity:.3}20%{opacity:1}100%{opacity:1}}
+  @keyframes buzz{0%,100%{filter:brightness(1)}50%{filter:brightness(1.35)}}
+
+  .wrap{position:relative;z-index:1;max-width:520px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 22px) 18px calc(env(safe-area-inset-bottom) + 110px)}
+  header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+  h1{margin:0;font-family:var(--head);font-weight:700;font-size:30px;line-height:1;color:var(--pink);text-shadow:0 0 6px var(--pink),0 0 22px rgba(255,79,163,.8);animation:flicker 5s steps(1) infinite}
+  .sub{margin:8px 0 0;font-weight:600;font-size:15px;color:var(--cyan2);text-shadow:0 0 8px rgba(127,243,255,.6);text-transform:capitalize}
+  .pill{display:none;align-items:center;gap:6px;padding:7px 11px;border-radius:999px;font-size:13px;font-weight:700;background:var(--glass);color:var(--yellow2);box-shadow:inset 0 0 0 2px var(--yellow2),0 0 14px rgba(255,232,107,.45);white-space:nowrap}
+  .pill.on{display:inline-flex}
+  .pill svg{animation:tw 1.4s steps(2) infinite}
+  .view{display:none}
+  .view.on{display:block}
+
+  .hello{display:flex;align-items:flex-end;gap:10px;margin:16px 0 14px}
+  .mascot{display:inline-flex;filter:drop-shadow(0 0 8px rgba(45,226,255,.7));animation:float 3.6s ease-in-out infinite;flex:none}
+  .mascot .eyes{animation:blink 4.2s steps(1) infinite}
+  .bubble{margin:0 0 10px;padding:10px 14px;border-radius:16px 16px 16px 4px;font-size:15px;line-height:1.35;flex:1;background:rgba(11,6,32,.85);color:var(--cyan2);box-shadow:inset 0 0 0 2px var(--cyan),0 0 18px rgba(45,226,255,.45);animation:pop .45s cubic-bezier(.2,1.4,.4,1) both}
+
+  .panel{border-radius:22px;background:var(--glass);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:inset 0 0 0 2px var(--cyan),0 0 26px rgba(45,226,255,.35)}
+  textarea{display:block;width:100%;min-height:200px;height:30vh;border:0;outline:0;resize:none;background:transparent;color:var(--ink);font:400 18px/1.45 var(--body);padding:18px 18px 4px}
+  textarea::placeholder{color:#8f83bd}
+  .foot{display:flex;justify-content:space-between;align-items:center;padding:6px 12px 12px 18px;font-size:13px;color:var(--muted)}
+  .mic{border:0;width:44px;height:44px;border-radius:14px;display:none;align-items:center;justify-content:center;cursor:pointer;background:var(--cyan);box-shadow:0 0 14px rgba(45,226,255,.8)}
+  .mic.on{display:inline-flex}
+  .mic.listening{background:var(--pink);box-shadow:0 0 18px rgba(255,79,163,.9);animation:buzz .8s ease-in-out infinite}
+  .hint{margin:20px 0 12px;text-align:center;font-family:var(--head);font-size:15px;color:var(--yellow2);text-shadow:0 0 10px rgba(255,232,107,.8)}
+
+  .cats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+  .cat{border:0;cursor:pointer;height:124px;border-radius:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;font-family:var(--head);font-size:14px;background:rgba(11,6,32,.85);transition:transform .15s ease,filter .15s ease}
+  .cat .ico{filter:drop-shadow(0 0 4px currentColor) drop-shadow(0 0 10px currentColor)}
+  .cat:hover{transform:translateY(-4px);filter:brightness(1.25)}
+  .cat:hover .ico{animation:neonOn .6s steps(1)}
+  .cat:active{transform:scale(.94)}
+  .cat:disabled{opacity:.45;cursor:default;transform:none}
+  .cat.saving{animation:buzz .5s ease-in-out infinite}
+  .cat.PERSO{color:var(--pink2);box-shadow:inset 0 0 0 3px var(--pink),0 0 22px rgba(255,79,163,.6),inset 0 0 18px rgba(255,79,163,.35)}
+  .cat.FAMILLE{color:var(--yellow2);box-shadow:inset 0 0 0 3px var(--yellow),0 0 22px rgba(255,210,63,.55),inset 0 0 18px rgba(255,210,63,.3)}
+  .cat.PRO{color:var(--cyan2);box-shadow:inset 0 0 0 3px var(--cyan),0 0 22px rgba(45,226,255,.6),inset 0 0 18px rgba(45,226,255,.3)}
+
+  .toast{position:fixed;left:50%;top:38%;transform:translate(-50%,-50%);z-index:10;width:min(310px,82vw);padding:18px;border-radius:20px;text-align:center;font-family:var(--head);font-size:17px;line-height:1.3;display:none;flex-direction:column;align-items:center;gap:10px;background:rgba(11,6,32,.95);color:var(--cyan2);box-shadow:inset 0 0 0 3px var(--cyan),0 0 40px rgba(45,226,255,.8)}
+  .toast.on{display:flex;animation:pop .45s cubic-bezier(.2,1.4,.4,1) both}
+  .toast .ico{filter:drop-shadow(0 0 8px currentColor)}
+
+  .banner{display:none;margin:14px 0 0;padding:12px 14px;border-radius:14px;font-size:14px;line-height:1.45;background:rgba(11,6,32,.9);color:var(--ink);box-shadow:inset 0 0 0 2px var(--pink)}
+  .banner.on{display:block}
+  .banner button{margin-left:6px}
+
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 12px}
+  .chip{cursor:pointer;border:0;border-radius:999px;padding:9px 14px;font:700 14px var(--body);background:rgba(11,6,32,.82);color:#c9bdf2;box-shadow:inset 0 0 0 2px #6b5a9a;transition:transform .15s ease}
+  .chip:active{transform:scale(.95)}
+  .chip .n{opacity:.7;margin-left:3px}
+  .chip.sel.TOUT{background:#f2ecff;color:var(--bg);box-shadow:0 0 16px rgba(242,236,255,.6)}
+  .chip.sel.PERSO{background:var(--pink);color:var(--bg);box-shadow:0 0 16px rgba(255,79,163,.8)}
+  .chip.sel.FAMILLE{background:var(--yellow);color:var(--bg);box-shadow:0 0 16px rgba(255,210,63,.8)}
+  .chip.sel.PRO{background:var(--cyan);color:var(--bg);box-shadow:0 0 16px rgba(45,226,255,.8)}
+  .search{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:16px;background:rgba(11,6,32,.85);box-shadow:inset 0 0 0 2px var(--muted)}
+  .search input{border:0;background:transparent;outline:none;flex:1;font:400 16px var(--body);color:var(--ink);min-width:0}
+  .search input::placeholder{color:#8f83bd}
+  .fresh{font-size:12px;color:var(--muted);text-align:right;margin:8px 2px 0;cursor:pointer}
+  .month{margin:18px 2px 10px;font-family:var(--head);font-size:18px;color:var(--cyan);text-shadow:0 0 10px rgba(45,226,255,.7);text-transform:capitalize}
+  .card{padding:14px 16px;border-radius:18px;display:flex;gap:12px;align-items:flex-start;margin-bottom:12px;cursor:pointer;background:rgba(11,6,32,.84);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);animation:rise .5s ease both}
+  .card.PERSO{box-shadow:inset 0 0 0 2px rgba(255,79,163,.6)} .card.PERSO .meta{color:var(--pink2)}
+  .card.FAMILLE{box-shadow:inset 0 0 0 2px rgba(255,210,63,.55)} .card.FAMILLE .meta{color:var(--yellow2)}
+  .card.PRO{box-shadow:inset 0 0 0 2px rgba(45,226,255,.6)} .card.PRO .meta{color:var(--cyan2)}
+  .card .ico{flex:none;margin-top:2px;filter:drop-shadow(0 0 5px currentColor)}
+  .card.PERSO .ico{color:var(--pink)} .card.FAMILLE .ico{color:var(--yellow)} .card.PRO .ico{color:var(--cyan)}
+  .card-body{min-width:0;flex:1}
+  .meta{font-size:12px;font-weight:700;letter-spacing:.02em;margin-bottom:4px}
+  .text{margin:0;font-size:16px;line-height:1.4;white-space:pre-wrap;word-wrap:break-word;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  .card.open .text{display:block}
+  .card .link{display:none;margin-top:10px;font-size:14px;color:var(--muted)}
+  .card.open .link{display:inline-block}
+  .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .tag{border:0;cursor:pointer;border-radius:8px;padding:4px 8px;font:700 12px var(--body);background:rgba(45,226,255,.12);color:var(--cyan2);box-shadow:inset 0 0 0 1px rgba(45,226,255,.5);transition:transform .12s ease,background .12s ease}
+  .tag:hover{background:rgba(45,226,255,.25);transform:translateY(-1px)}
+  .tag.on{background:var(--cyan);color:var(--bg);box-shadow:0 0 12px rgba(45,226,255,.8)}
+  .tag.new{animation:pop .45s cubic-bezier(.2,1.4,.4,1) both}
+  .tagging{display:inline-flex;align-items:center;gap:6px;margin-top:8px;font-size:12px;color:var(--yellow2)}
+  .tagging i{width:6px;height:6px;background:var(--yellow2);box-shadow:0 0 8px var(--yellow2);animation:tw .6s steps(2) infinite}
+  .cloud{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 0}
+  .cloud-label{width:100%;font-size:12px;color:var(--muted);margin-bottom:2px}
+  .active-tag{display:none;align-items:center;gap:8px;margin:12px 0 0;font-size:14px;color:var(--ink)}
+  .active-tag.on{display:flex}
+  .mini{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 92px);transform:translateX(-50%);z-index:9;padding:10px 14px;border-radius:14px;font:700 14px var(--body);background:rgba(11,6,32,.95);color:var(--cyan2);box-shadow:inset 0 0 0 2px var(--cyan),0 0 22px rgba(45,226,255,.6);display:none;max-width:90vw;text-align:center}
+  .mini.on{display:block;animation:pop .45s cubic-bezier(.2,1.4,.4,1) both}
+  .actions{display:none;align-items:center;gap:14px;margin-top:10px;flex-wrap:wrap}
+  .card.open .actions{display:flex}
+  .card .actions .link{display:inline-block;margin:0}
+  .del{border:0;cursor:pointer;border-radius:10px;padding:7px 12px;font:700 13px var(--body);background:transparent;color:#ff8fb8;box-shadow:inset 0 0 0 2px rgba(255,79,163,.7);display:inline-flex;align-items:center;gap:6px}
+  .del:hover{background:rgba(255,79,163,.15)}
+  .confirm{display:none;width:100%;margin-top:10px;padding:12px;border-radius:14px;background:rgba(255,79,163,.1);box-shadow:inset 0 0 0 2px var(--pink);font-size:14px;line-height:1.4}
+  .card.asking .confirm{display:block}
+  .card.asking .actions{display:none}
+  .confirm .row{display:flex;gap:10px;margin-top:10px}
+  .confirm button{border:0;cursor:pointer;border-radius:10px;padding:9px 14px;font:700 14px var(--body)}
+  .confirm .no{background:rgba(242,236,255,.12);color:var(--ink)}
+  .confirm .yes{background:var(--pink);color:var(--bg);box-shadow:0 0 14px rgba(255,79,163,.7)}
+  .confirm .yes:disabled{opacity:.6;cursor:default}
+  .card.gone{animation:gone .5s ease forwards;pointer-events:none}
+  @keyframes gone{0%{opacity:1;transform:none;filter:none}30%{filter:brightness(2) hue-rotate(40deg)}100%{opacity:0;transform:translateX(40px) scale(.96)}}
+  .lock{position:fixed;inset:0;z-index:20;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(8,4,24,.82);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+  .lock.on{display:flex}
+  .lock form{width:min(340px,100%);padding:24px 20px;border-radius:22px;text-align:center;background:rgba(11,6,32,.95);box-shadow:inset 0 0 0 2px var(--cyan),0 0 30px rgba(45,226,255,.45);animation:pop .45s cubic-bezier(.2,1.4,.4,1) both}
+  .lock h2{margin:12px 0 6px;font-family:var(--head);font-size:20px;color:var(--pink);text-shadow:0 0 10px rgba(255,79,163,.8)}
+  .lock p{margin:0 0 16px;color:var(--muted);font-size:14px}
+  .lock input{width:100%;padding:13px 14px;border:0;border-radius:14px;font:500 18px var(--body);text-align:center;letter-spacing:.15em;background:rgba(242,236,255,.08);color:var(--ink);box-shadow:inset 0 0 0 2px var(--muted);outline:none}
+  .lock input:focus{box-shadow:inset 0 0 0 2px var(--cyan)}
+  .lock button{margin-top:14px;width:100%;padding:13px;border:0;border-radius:14px;font-family:var(--head);font-size:14px;cursor:pointer;background:var(--pink);color:var(--bg);box-shadow:0 0 16px rgba(255,79,163,.8)}
+  .lock .msg{min-height:18px;margin-top:10px;font-size:13px;color:var(--yellow2)}
+  .state{text-align:center;color:var(--muted);padding:40px 16px;font-size:15px;line-height:1.5}
+  .btn{border:0;border-radius:12px;padding:8px 14px;font:700 14px var(--body);cursor:pointer;background:var(--cyan);color:var(--bg)}
+
+  nav{position:fixed;z-index:5;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom) + 18px);width:min(484px,calc(100vw - 28px));display:flex;gap:8px;padding:8px;border-radius:22px;background:rgba(11,6,32,.88);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:inset 0 0 0 2px rgba(255,79,163,.6),0 0 18px rgba(255,79,163,.3)}
+  nav button{flex:1;display:flex;align-items:center;justify-content:center;gap:10px;height:50px;border:0;border-radius:16px;background:transparent;color:#c9bdf2;font-family:var(--head);font-size:13px;cursor:pointer}
+  nav button.sel{background:var(--pink);color:var(--bg);box-shadow:0 0 16px rgba(255,79,163,.8)}
+  .sr{position:absolute;left:-9999px}
+  @media (prefers-reduced-motion: reduce){ *{animation:none!important} }
+</style>
+</head>
+<body>
+<div class="scene" aria-hidden="true">
+  <img src="fond.png" alt="" onerror="this.onerror=null;this.src='neon.jpg'">
+  <div class="veil"></div>
+  <div class="rain"></div><div class="rain r2"></div>
+  <div class="drone"><i></i><b></b></div>
+</div>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1 id="title">Mon Journal</h1>
+      <p class="sub" id="today"></p>
+    </div>
+    <span class="pill" id="streak"><svg width="20" height="20" viewBox="0 0 10 10" shape-rendering="crispEdges" aria-hidden="true"><rect x="4" y="0" width="1" height="1" fill="#ff7a2f"></rect><rect x="3" y="1" width="1" height="1" fill="#ff7a2f"></rect><rect x="4" y="1" width="1" height="1" fill="#ff7a2f"></rect><rect x="2" y="2" width="1" height="1" fill="#ff7a2f"></rect><rect x="3" y="2" width="1" height="1" fill="#ff7a2f"></rect><rect x="4" y="2" width="1" height="1" fill="#ff7a2f"></rect><rect x="6" y="2" width="1" height="1" fill="#ff7a2f"></rect><rect x="2" y="3" width="1" height="1" fill="#ff7a2f"></rect><rect x="3" y="3" width="1" height="1" fill="#ff7a2f"></rect><rect x="4" y="3" width="1" height="1" fill="#ff7a2f"></rect><rect x="5" y="3" width="1" height="1" fill="#ff7a2f"></rect><rect x="6" y="3" width="1" height="1" fill="#ff7a2f"></rect><rect x="7" y="3" width="1" height="1" fill="#ff7a2f"></rect><rect x="1" y="4" width="1" height="1" fill="#ff7a2f"></rect><rect x="2" y="4" width="1" height="1" fill="#ff7a2f"></rect><rect x="3" y="4" width="1" height="1" fill="#ffd34e"></rect><rect x="4" y="4" width="1" height="1" fill="#ffd34e"></rect><rect x="5" y="4" width="1" height="1" fill="#ff7a2f"></rect><rect x="6" y="4" width="1" height="1" fill="#ff7a2f"></rect><rect x="7" y="4" width="1" height="1" fill="#ff7a2f"></rect><rect x="1" y="5" width="1" height="1" fill="#ff7a2f"></rect><rect x="2" y="5" width="1" height="1" fill="#ffd34e"></rect><rect x="3" y="5" width="1" height="1" fill="#ffd34e"></rect><rect x="4" y="5" width="1" height="1" fill="#ffd34e"></rect><rect x="5" y="5" width="1" height="1" fill="#ffd34e"></rect><rect x="6" y="5" width="1" height="1" fill="#ff7a2f"></rect><rect x="7" y="5" width="1" height="1" fill="#ff7a2f"></rect><rect x="0" y="6" width="1" height="1" fill="#ff7a2f"></rect><rect x="1" y="6" width="1" height="1" fill="#ffd34e"></rect><rect x="2" y="6" width="1" height="1" fill="#ffd34e"></rect><rect x="3" y="6" width="1" height="1" fill="#fff6d0"></rect><rect x="4" y="6" width="1" height="1" fill="#fff6d0"></rect><rect x="5" y="6" width="1" height="1" fill="#ffd34e"></rect><rect x="6" y="6" width="1" height="1" fill="#ffd34e"></rect><rect x="7" y="6" width="1" height="1" fill="#ff7a2f"></rect><rect x="8" y="6" width="1" height="1" fill="#ff7a2f"></rect><rect x="0" y="7" width="1" height="1" fill="#ff7a2f"></rect><rect x="1" y="7" width="1" height="1" fill="#ffd34e"></rect><rect x="2" y="7" width="1" height="1" fill="#ffd34e"></rect><rect x="3" y="7" width="1" height="1" fill="#fff6d0"></rect><rect x="4" y="7" width="1" height="1" fill="#fff6d0"></rect><rect x="5" y="7" width="1" height="1" fill="#ffd34e"></rect><rect x="6" y="7" width="1" height="1" fill="#ffd34e"></rect><rect x="7" y="7" width="1" height="1" fill="#ff7a2f"></rect><rect x="8" y="7" width="1" height="1" fill="#ff7a2f"></rect><rect x="1" y="8" width="1" height="1" fill="#ff7a2f"></rect><rect x="2" y="8" width="1" height="1" fill="#ffd34e"></rect><rect x="3" y="8" width="1" height="1" fill="#ffd34e"></rect><rect x="4" y="8" width="1" height="1" fill="#ffd34e"></rect><rect x="5" y="8" width="1" height="1" fill="#ffd34e"></rect><rect x="6" y="8" width="1" height="1" fill="#ffd34e"></rect><rect x="7" y="8" width="1" height="1" fill="#ff7a2f"></rect><rect x="2" y="9" width="1" height="1" fill="#ff7a2f"></rect><rect x="3" y="9" width="1" height="1" fill="#ff7a2f"></rect><rect x="4" y="9" width="1" height="1" fill="#ff7a2f"></rect><rect x="5" y="9" width="1" height="1" fill="#ff7a2f"></rect><rect x="6" y="9" width="1" height="1" fill="#ff7a2f"></rect></svg><span id="streakN"></span></span>
+  </header>
+  <div class="banner" id="banner"></div>
+
+  <section class="view on" id="v-write">
+    <div class="hello">
+      <span class="mascot"><svg width="66" height="60" viewBox="0 0 11 10" shape-rendering="crispEdges" role="img" aria-label="Petit robot compagnon"><rect x="4" y="0" width="1" height="1" fill="#ff4fa3"></rect><rect x="4" y="1" width="1" height="1" fill="#a9b4e8"></rect><rect x="1" y="2" width="1" height="1" fill="#a9b4e8"></rect><rect x="2" y="2" width="1" height="1" fill="#a9b4e8"></rect><rect x="3" y="2" width="1" height="1" fill="#a9b4e8"></rect><rect x="4" y="2" width="1" height="1" fill="#a9b4e8"></rect><rect x="5" y="2" width="1" height="1" fill="#a9b4e8"></rect><rect x="6" y="2" width="1" height="1" fill="#a9b4e8"></rect><rect x="7" y="2" width="1" height="1" fill="#a9b4e8"></rect><rect x="8" y="2" width="1" height="1" fill="#a9b4e8"></rect><rect x="9" y="2" width="1" height="1" fill="#a9b4e8"></rect><rect x="0" y="3" width="1" height="1" fill="#a9b4e8"></rect><rect x="1" y="3" width="1" height="1" fill="#a9b4e8"></rect><rect x="2" y="3" width="1" height="1" fill="#a9b4e8"></rect><rect x="3" y="3" width="1" height="1" fill="#a9b4e8"></rect><rect x="4" y="3" width="1" height="1" fill="#a9b4e8"></rect><rect x="5" y="3" width="1" height="1" fill="#a9b4e8"></rect><rect x="6" y="3" width="1" height="1" fill="#a9b4e8"></rect><rect x="7" y="3" width="1" height="1" fill="#a9b4e8"></rect><rect x="8" y="3" width="1" height="1" fill="#a9b4e8"></rect><rect x="9" y="3" width="1" height="1" fill="#a9b4e8"></rect><rect x="10" y="3" width="1" height="1" fill="#a9b4e8"></rect><rect x="0" y="4" width="1" height="1" fill="#a9b4e8"></rect><rect x="1" y="4" width="1" height="1" fill="#a9b4e8"></rect><rect x="4" y="4" width="1" height="1" fill="#a9b4e8"></rect><rect x="5" y="4" width="1" height="1" fill="#a9b4e8"></rect><rect x="6" y="4" width="1" height="1" fill="#a9b4e8"></rect><rect x="9" y="4" width="1" height="1" fill="#a9b4e8"></rect><rect x="10" y="4" width="1" height="1" fill="#a9b4e8"></rect><rect x="0" y="5" width="1" height="1" fill="#a9b4e8"></rect><rect x="1" y="5" width="1" height="1" fill="#a9b4e8"></rect><rect x="4" y="5" width="1" height="1" fill="#a9b4e8"></rect><rect x="5" y="5" width="1" height="1" fill="#a9b4e8"></rect><rect x="6" y="5" width="1" height="1" fill="#a9b4e8"></rect><rect x="9" y="5" width="1" height="1" fill="#a9b4e8"></rect><rect x="10" y="5" width="1" height="1" fill="#a9b4e8"></rect><rect x="0" y="6" width="1" height="1" fill="#a9b4e8"></rect><rect x="1" y="6" width="1" height="1" fill="#a9b4e8"></rect><rect x="2" y="6" width="1" height="1" fill="#a9b4e8"></rect><rect x="3" y="6" width="1" height="1" fill="#a9b4e8"></rect><rect x="4" y="6" width="1" height="1" fill="#a9b4e8"></rect><rect x="5" y="6" width="1" height="1" fill="#a9b4e8"></rect><rect x="6" y="6" width="1" height="1" fill="#a9b4e8"></rect><rect x="7" y="6" width="1" height="1" fill="#a9b4e8"></rect><rect x="8" y="6" width="1" height="1" fill="#a9b4e8"></rect><rect x="9" y="6" width="1" height="1" fill="#a9b4e8"></rect><rect x="10" y="6" width="1" height="1" fill="#a9b4e8"></rect><rect x="0" y="7" width="1" height="1" fill="#a9b4e8"></rect><rect x="1" y="7" width="1" height="1" fill="#a9b4e8"></rect><rect x="2" y="7" width="1" height="1" fill="#a9b4e8"></rect><rect x="4" y="7" width="1" height="1" fill="#ff4fa3"></rect><rect x="5" y="7" width="1" height="1" fill="#ff4fa3"></rect><rect x="6" y="7" width="1" height="1" fill="#ff4fa3"></rect><rect x="8" y="7" width="1" height="1" fill="#a9b4e8"></rect><rect x="9" y="7" width="1" height="1" fill="#a9b4e8"></rect><rect x="10" y="7" width="1" height="1" fill="#a9b4e8"></rect><rect x="1" y="8" width="1" height="1" fill="#a9b4e8"></rect><rect x="2" y="8" width="1" height="1" fill="#a9b4e8"></rect><rect x="3" y="8" width="1" height="1" fill="#a9b4e8"></rect><rect x="4" y="8" width="1" height="1" fill="#a9b4e8"></rect><rect x="5" y="8" width="1" height="1" fill="#a9b4e8"></rect><rect x="6" y="8" width="1" height="1" fill="#a9b4e8"></rect><rect x="7" y="8" width="1" height="1" fill="#a9b4e8"></rect><rect x="8" y="8" width="1" height="1" fill="#a9b4e8"></rect><rect x="9" y="8" width="1" height="1" fill="#a9b4e8"></rect><rect x="2" y="9" width="1" height="1" fill="#a9b4e8"></rect><rect x="8" y="9" width="1" height="1" fill="#a9b4e8"></rect><g class="eyes"><rect x="2" y="4" width="1" height="1" fill="#2de2ff"></rect><rect x="3" y="4" width="1" height="1" fill="#2de2ff"></rect><rect x="7" y="4" width="1" height="1" fill="#2de2ff"></rect><rect x="8" y="4" width="1" height="1" fill="#2de2ff"></rect><rect x="2" y="5" width="1" height="1" fill="#2de2ff"></rect><rect x="3" y="5" width="1" height="1" fill="#2de2ff"></rect><rect x="7" y="5" width="1" height="1" fill="#2de2ff"></rect><rect x="8" y="5" width="1" height="1" fill="#2de2ff"></rect></g></svg></span>
+      <p class="bubble" id="bubble">Connexion établie. Qu'est-ce que tu veux sauvegarder ?</p>
+    </div>
+    <div class="panel">
+      <label class="sr" for="text">Ta note</label>
+      <textarea id="text" placeholder="Tape ta note ici…"></textarea>
+      <div class="foot">
+        <span id="count">Brouillon gardé automatiquement</span>
+      </div>
+    </div>
+    <p class="hint">» Choisis ton canal «</p>
+    <div class="cats">
+      <button class="cat PERSO" data-cat="Perso"><svg class="ico" width="45" height="33" viewBox="0 0 15 11" shape-rendering="crispEdges" aria-hidden="true"><rect x="3" y="0" width="1" height="1" fill="#ff6fb5"/><rect x="4" y="0" width="1" height="1" fill="#ff6fb5"/><rect x="5" y="0" width="1" height="1" fill="#ff6fb5"/><rect x="9" y="0" width="1" height="1" fill="#ff6fb5"/><rect x="10" y="0" width="1" height="1" fill="#ff6fb5"/><rect x="11" y="0" width="1" height="1" fill="#ff6fb5"/><rect x="2" y="1" width="1" height="1" fill="#ff6fb5"/><rect x="6" y="1" width="1" height="1" fill="#ff6fb5"/><rect x="8" y="1" width="1" height="1" fill="#ff6fb5"/><rect x="12" y="1" width="1" height="1" fill="#ff6fb5"/><rect x="1" y="2" width="1" height="1" fill="#ff6fb5"/><rect x="7" y="2" width="1" height="1" fill="#ff6fb5"/><rect x="13" y="2" width="1" height="1" fill="#ff6fb5"/><rect x="1" y="3" width="1" height="1" fill="#ff6fb5"/><rect x="4" y="3" width="1" height="1" fill="#ffffff"/><rect x="13" y="3" width="1" height="1" fill="#ff6fb5"/><rect x="1" y="4" width="1" height="1" fill="#ff6fb5"/><rect x="3" y="4" width="1" height="1" fill="#ffffff"/><rect x="4" y="4" width="1" height="1" fill="#ffffff"/><rect x="13" y="4" width="1" height="1" fill="#ff6fb5"/><rect x="2" y="5" width="1" height="1" fill="#ff6fb5"/><rect x="12" y="5" width="1" height="1" fill="#ff6fb5"/><rect x="3" y="6" width="1" height="1" fill="#ff6fb5"/><rect x="11" y="6" width="1" height="1" fill="#ff6fb5"/><rect x="4" y="7" width="1" height="1" fill="#ff6fb5"/><rect x="10" y="7" width="1" height="1" fill="#ff6fb5"/><rect x="5" y="8" width="1" height="1" fill="#ff6fb5"/><rect x="9" y="8" width="1" height="1" fill="#ff6fb5"/><rect x="6" y="9" width="1" height="1" fill="#ff6fb5"/><rect x="8" y="9" width="1" height="1" fill="#ff6fb5"/><rect x="7" y="10" width="1" height="1" fill="#ff6fb5"/></svg>Perso</button>
+      <button class="cat FAMILLE" data-cat="Famille"><svg class="ico" width="45" height="39" viewBox="0 0 15 13" shape-rendering="crispEdges" aria-hidden="true"><rect x="7" y="0" width="1" height="1" fill="#ffe86b"/><rect x="6" y="1" width="1" height="1" fill="#ffe86b"/><rect x="8" y="1" width="1" height="1" fill="#ffe86b"/><rect x="5" y="2" width="1" height="1" fill="#ffe86b"/><rect x="9" y="2" width="1" height="1" fill="#ffe86b"/><rect x="4" y="3" width="1" height="1" fill="#ffe86b"/><rect x="10" y="3" width="1" height="1" fill="#ffe86b"/><rect x="3" y="4" width="1" height="1" fill="#ffe86b"/><rect x="11" y="4" width="1" height="1" fill="#ffe86b"/><rect x="2" y="5" width="1" height="1" fill="#ffe86b"/><rect x="12" y="5" width="1" height="1" fill="#ffe86b"/><rect x="1" y="6" width="1" height="1" fill="#ffe86b"/><rect x="2" y="6" width="1" height="1" fill="#ffe86b"/><rect x="3" y="6" width="1" height="1" fill="#ffe86b"/><rect x="11" y="6" width="1" height="1" fill="#ffe86b"/><rect x="12" y="6" width="1" height="1" fill="#ffe86b"/><rect x="13" y="6" width="1" height="1" fill="#ffe86b"/><rect x="3" y="7" width="1" height="1" fill="#ffe86b"/><rect x="11" y="7" width="1" height="1" fill="#ffe86b"/><rect x="3" y="8" width="1" height="1" fill="#ffe86b"/><rect x="5" y="8" width="1" height="1" fill="#ff6fb5"/><rect x="6" y="8" width="1" height="1" fill="#ff6fb5"/><rect x="8" y="8" width="1" height="1" fill="#ff6fb5"/><rect x="9" y="8" width="1" height="1" fill="#ff6fb5"/><rect x="11" y="8" width="1" height="1" fill="#ffe86b"/><rect x="3" y="9" width="1" height="1" fill="#ffe86b"/><rect x="5" y="9" width="1" height="1" fill="#ff6fb5"/><rect x="6" y="9" width="1" height="1" fill="#ff6fb5"/><rect x="7" y="9" width="1" height="1" fill="#ff6fb5"/><rect x="8" y="9" width="1" height="1" fill="#ff6fb5"/><rect x="9" y="9" width="1" height="1" fill="#ff6fb5"/><rect x="11" y="9" width="1" height="1" fill="#ffe86b"/><rect x="3" y="10" width="1" height="1" fill="#ffe86b"/><rect x="6" y="10" width="1" height="1" fill="#ff6fb5"/><rect x="7" y="10" width="1" height="1" fill="#ff6fb5"/><rect x="8" y="10" width="1" height="1" fill="#ff6fb5"/><rect x="11" y="10" width="1" height="1" fill="#ffe86b"/><rect x="3" y="11" width="1" height="1" fill="#ffe86b"/><rect x="7" y="11" width="1" height="1" fill="#ff6fb5"/><rect x="11" y="11" width="1" height="1" fill="#ffe86b"/><rect x="3" y="12" width="1" height="1" fill="#ffe86b"/><rect x="4" y="12" width="1" height="1" fill="#ffe86b"/><rect x="5" y="12" width="1" height="1" fill="#ffe86b"/><rect x="6" y="12" width="1" height="1" fill="#ffe86b"/><rect x="7" y="12" width="1" height="1" fill="#ffe86b"/><rect x="8" y="12" width="1" height="1" fill="#ffe86b"/><rect x="9" y="12" width="1" height="1" fill="#ffe86b"/><rect x="10" y="12" width="1" height="1" fill="#ffe86b"/><rect x="11" y="12" width="1" height="1" fill="#ffe86b"/></svg>Famille</button>
+      <button class="cat PRO" data-cat="Pro"><svg class="ico" width="45" height="30" viewBox="0 0 15 10" shape-rendering="crispEdges" aria-hidden="true"><rect x="5" y="0" width="1" height="1" fill="#7ff3ff"/><rect x="6" y="0" width="1" height="1" fill="#7ff3ff"/><rect x="7" y="0" width="1" height="1" fill="#7ff3ff"/><rect x="8" y="0" width="1" height="1" fill="#7ff3ff"/><rect x="9" y="0" width="1" height="1" fill="#7ff3ff"/><rect x="5" y="1" width="1" height="1" fill="#7ff3ff"/><rect x="9" y="1" width="1" height="1" fill="#7ff3ff"/><rect x="1" y="2" width="1" height="1" fill="#7ff3ff"/><rect x="2" y="2" width="1" height="1" fill="#7ff3ff"/><rect x="3" y="2" width="1" height="1" fill="#7ff3ff"/><rect x="4" y="2" width="1" height="1" fill="#7ff3ff"/><rect x="5" y="2" width="1" height="1" fill="#7ff3ff"/><rect x="6" y="2" width="1" height="1" fill="#7ff3ff"/><rect x="7" y="2" width="1" height="1" fill="#7ff3ff"/><rect x="8" y="2" width="1" height="1" fill="#7ff3ff"/><rect x="9" y="2" width="1" height="1" fill="#7ff3ff"/><rect x="10" y="2" width="1" height="1" fill="#7ff3ff"/><rect x="11" y="2" width="1" height="1" fill="#7ff3ff"/><rect x="12" y="2" width="1" height="1" fill="#7ff3ff"/><rect x="13" y="2" width="1" height="1" fill="#7ff3ff"/><rect x="1" y="3" width="1" height="1" fill="#7ff3ff"/><rect x="13" y="3" width="1" height="1" fill="#7ff3ff"/><rect x="1" y="4" width="1" height="1" fill="#7ff3ff"/><rect x="13" y="4" width="1" height="1" fill="#7ff3ff"/><rect x="1" y="5" width="1" height="1" fill="#7ff3ff"/><rect x="2" y="5" width="1" height="1" fill="#7ff3ff"/><rect x="3" y="5" width="1" height="1" fill="#7ff3ff"/><rect x="4" y="5" width="1" height="1" fill="#7ff3ff"/><rect x="5" y="5" width="1" height="1" fill="#7ff3ff"/><rect x="6" y="5" width="1" height="1" fill="#7ff3ff"/><rect x="7" y="5" width="1" height="1" fill="#ffffff"/><rect x="8" y="5" width="1" height="1" fill="#7ff3ff"/><rect x="9" y="5" width="1" height="1" fill="#7ff3ff"/><rect x="10" y="5" width="1" height="1" fill="#7ff3ff"/><rect x="11" y="5" width="1" height="1" fill="#7ff3ff"/><rect x="12" y="5" width="1" height="1" fill="#7ff3ff"/><rect x="13" y="5" width="1" height="1" fill="#7ff3ff"/><rect x="1" y="6" width="1" height="1" fill="#7ff3ff"/><rect x="7" y="6" width="1" height="1" fill="#ffffff"/><rect x="13" y="6" width="1" height="1" fill="#7ff3ff"/><rect x="1" y="7" width="1" height="1" fill="#7ff3ff"/><rect x="13" y="7" width="1" height="1" fill="#7ff3ff"/><rect x="1" y="8" width="1" height="1" fill="#7ff3ff"/><rect x="13" y="8" width="1" height="1" fill="#7ff3ff"/><rect x="1" y="9" width="1" height="1" fill="#7ff3ff"/><rect x="2" y="9" width="1" height="1" fill="#7ff3ff"/><rect x="3" y="9" width="1" height="1" fill="#7ff3ff"/><rect x="4" y="9" width="1" height="1" fill="#7ff3ff"/><rect x="5" y="9" width="1" height="1" fill="#7ff3ff"/><rect x="6" y="9" width="1" height="1" fill="#7ff3ff"/><rect x="7" y="9" width="1" height="1" fill="#7ff3ff"/><rect x="8" y="9" width="1" height="1" fill="#7ff3ff"/><rect x="9" y="9" width="1" height="1" fill="#7ff3ff"/><rect x="10" y="9" width="1" height="1" fill="#7ff3ff"/><rect x="11" y="9" width="1" height="1" fill="#7ff3ff"/><rect x="12" y="9" width="1" height="1" fill="#7ff3ff"/><rect x="13" y="9" width="1" height="1" fill="#7ff3ff"/></svg>Pro</button>
+    </div>
+  </section>
+
+  <section class="view" id="v-history">
+    <div class="chips" id="chips"></div>
+    <label class="search"><svg width="16" height="16" viewBox="0 0 8 8" shape-rendering="crispEdges" aria-hidden="true"><rect x="1" y="0" width="1" height="1" fill="#7ff3ff"></rect><rect x="2" y="0" width="1" height="1" fill="#7ff3ff"></rect><rect x="3" y="0" width="1" height="1" fill="#7ff3ff"></rect><rect x="0" y="1" width="1" height="1" fill="#7ff3ff"></rect><rect x="4" y="1" width="1" height="1" fill="#7ff3ff"></rect><rect x="0" y="2" width="1" height="1" fill="#7ff3ff"></rect><rect x="4" y="2" width="1" height="1" fill="#7ff3ff"></rect><rect x="0" y="3" width="1" height="1" fill="#7ff3ff"></rect><rect x="4" y="3" width="1" height="1" fill="#7ff3ff"></rect><rect x="1" y="4" width="1" height="1" fill="#7ff3ff"></rect><rect x="2" y="4" width="1" height="1" fill="#7ff3ff"></rect><rect x="3" y="4" width="1" height="1" fill="#7ff3ff"></rect><rect x="4" y="5" width="1" height="1" fill="#7ff3ff"></rect><rect x="5" y="5" width="1" height="1" fill="#7ff3ff"></rect><rect x="5" y="6" width="1" height="1" fill="#7ff3ff"></rect><rect x="6" y="6" width="1" height="1" fill="#7ff3ff"></rect><rect x="6" y="7" width="1" height="1" fill="#7ff3ff"></rect><rect x="7" y="7" width="1" height="1" fill="#7ff3ff"></rect></svg><span class="sr">Rechercher</span><input id="search" type="search" placeholder="Rechercher dans mes notes…"></label>
+    <div class="active-tag" id="activeTag"></div>
+    <div class="cloud" id="cloud"></div>
+    <div class="fresh" id="fresh"></div>
+    <div id="list"></div>
+  </section>
+</div>
+
+<div class="lock" id="lock">
+  <form id="lockForm" autocomplete="off">
+    <span class="mascot"><svg width="66" height="60" viewBox="0 0 11 10" shape-rendering="crispEdges" role="img" aria-label="Petit robot compagnon"><rect x="4" y="0" width="1" height="1" fill="#ff4fa3"></rect><rect x="4" y="1" width="1" height="1" fill="#a9b4e8"></rect><rect x="1" y="2" width="1" height="1" fill="#a9b4e8"></rect><rect x="2" y="2" width="1" height="1" fill="#a9b4e8"></rect><rect x="3" y="2" width="1" height="1" fill="#a9b4e8"></rect><rect x="4" y="2" width="1" height="1" fill="#a9b4e8"></rect><rect x="5" y="2" width="1" height="1" fill="#a9b4e8"></rect><rect x="6" y="2" width="1" height="1" fill="#a9b4e8"></rect><rect x="7" y="2" width="1" height="1" fill="#a9b4e8"></rect><rect x="8" y="2" width="1" height="1" fill="#a9b4e8"></rect><rect x="9" y="2" width="1" height="1" fill="#a9b4e8"></rect><rect x="0" y="3" width="1" height="1" fill="#a9b4e8"></rect><rect x="1" y="3" width="1" height="1" fill="#a9b4e8"></rect><rect x="2" y="3" width="1" height="1" fill="#a9b4e8"></rect><rect x="3" y="3" width="1" height="1" fill="#a9b4e8"></rect><rect x="4" y="3" width="1" height="1" fill="#a9b4e8"></rect><rect x="5" y="3" width="1" height="1" fill="#a9b4e8"></rect><rect x="6" y="3" width="1" height="1" fill="#a9b4e8"></rect><rect x="7" y="3" width="1" height="1" fill="#a9b4e8"></rect><rect x="8" y="3" width="1" height="1" fill="#a9b4e8"></rect><rect x="9" y="3" width="1" height="1" fill="#a9b4e8"></rect><rect x="10" y="3" width="1" height="1" fill="#a9b4e8"></rect><rect x="0" y="4" width="1" height="1" fill="#a9b4e8"></rect><rect x="1" y="4" width="1" height="1" fill="#a9b4e8"></rect><rect x="4" y="4" width="1" height="1" fill="#a9b4e8"></rect><rect x="5" y="4" width="1" height="1" fill="#a9b4e8"></rect><rect x="6" y="4" width="1" height="1" fill="#a9b4e8"></rect><rect x="9" y="4" width="1" height="1" fill="#a9b4e8"></rect><rect x="10" y="4" width="1" height="1" fill="#a9b4e8"></rect><rect x="0" y="5" width="1" height="1" fill="#a9b4e8"></rect><rect x="1" y="5" width="1" height="1" fill="#a9b4e8"></rect><rect x="4" y="5" width="1" height="1" fill="#a9b4e8"></rect><rect x="5" y="5" width="1" height="1" fill="#a9b4e8"></rect><rect x="6" y="5" width="1" height="1" fill="#a9b4e8"></rect><rect x="9" y="5" width="1" height="1" fill="#a9b4e8"></rect><rect x="10" y="5" width="1" height="1" fill="#a9b4e8"></rect><rect x="0" y="6" width="1" height="1" fill="#a9b4e8"></rect><rect x="1" y="6" width="1" height="1" fill="#a9b4e8"></rect><rect x="2" y="6" width="1" height="1" fill="#a9b4e8"></rect><rect x="3" y="6" width="1" height="1" fill="#a9b4e8"></rect><rect x="4" y="6" width="1" height="1" fill="#a9b4e8"></rect><rect x="5" y="6" width="1" height="1" fill="#a9b4e8"></rect><rect x="6" y="6" width="1" height="1" fill="#a9b4e8"></rect><rect x="7" y="6" width="1" height="1" fill="#a9b4e8"></rect><rect x="8" y="6" width="1" height="1" fill="#a9b4e8"></rect><rect x="9" y="6" width="1" height="1" fill="#a9b4e8"></rect><rect x="10" y="6" width="1" height="1" fill="#a9b4e8"></rect><rect x="0" y="7" width="1" height="1" fill="#a9b4e8"></rect><rect x="1" y="7" width="1" height="1" fill="#a9b4e8"></rect><rect x="2" y="7" width="1" height="1" fill="#a9b4e8"></rect><rect x="4" y="7" width="1" height="1" fill="#ff4fa3"></rect><rect x="5" y="7" width="1" height="1" fill="#ff4fa3"></rect><rect x="6" y="7" width="1" height="1" fill="#ff4fa3"></rect><rect x="8" y="7" width="1" height="1" fill="#a9b4e8"></rect><rect x="9" y="7" width="1" height="1" fill="#a9b4e8"></rect><rect x="10" y="7" width="1" height="1" fill="#a9b4e8"></rect><rect x="1" y="8" width="1" height="1" fill="#a9b4e8"></rect><rect x="2" y="8" width="1" height="1" fill="#a9b4e8"></rect><rect x="3" y="8" width="1" height="1" fill="#a9b4e8"></rect><rect x="4" y="8" width="1" height="1" fill="#a9b4e8"></rect><rect x="5" y="8" width="1" height="1" fill="#a9b4e8"></rect><rect x="6" y="8" width="1" height="1" fill="#a9b4e8"></rect><rect x="7" y="8" width="1" height="1" fill="#a9b4e8"></rect><rect x="8" y="8" width="1" height="1" fill="#a9b4e8"></rect><rect x="9" y="8" width="1" height="1" fill="#a9b4e8"></rect><rect x="2" y="9" width="1" height="1" fill="#a9b4e8"></rect><rect x="8" y="9" width="1" height="1" fill="#a9b4e8"></rect><g class="eyes"><rect x="2" y="4" width="1" height="1" fill="#2de2ff"></rect><rect x="3" y="4" width="1" height="1" fill="#2de2ff"></rect><rect x="7" y="4" width="1" height="1" fill="#2de2ff"></rect><rect x="8" y="4" width="1" height="1" fill="#2de2ff"></rect><rect x="2" y="5" width="1" height="1" fill="#2de2ff"></rect><rect x="3" y="5" width="1" height="1" fill="#2de2ff"></rect><rect x="7" y="5" width="1" height="1" fill="#2de2ff"></rect><rect x="8" y="5" width="1" height="1" fill="#2de2ff"></rect></g></svg></span>
+    <h2>Accès sécurisé</h2>
+    <p>Tape ton code pour ouvrir ton journal.</p>
+    <label class="sr" for="codeInput">Code d'accès</label>
+    <input id="codeInput" type="password" inputmode="text" autocapitalize="off" autocorrect="off" placeholder="••••••">
+    <button type="submit">Déverrouiller</button>
+    <div class="msg" id="lockMsg"></div>
+  </form>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="mini" id="mini" role="status" aria-live="polite"></div>
+
+<nav>
+  <button class="sel" data-view="write"><svg width="16" height="16" viewBox="0 0 8 8" shape-rendering="crispEdges" aria-hidden="true"><rect x="6" y="0" width="1" height="1" fill="currentColor"></rect><rect x="7" y="0" width="1" height="1" fill="currentColor"></rect><rect x="5" y="1" width="1" height="1" fill="currentColor"></rect><rect x="6" y="1" width="1" height="1" fill="currentColor"></rect><rect x="7" y="1" width="1" height="1" fill="currentColor"></rect><rect x="4" y="2" width="1" height="1" fill="currentColor"></rect><rect x="5" y="2" width="1" height="1" fill="currentColor"></rect><rect x="6" y="2" width="1" height="1" fill="currentColor"></rect><rect x="3" y="3" width="1" height="1" fill="currentColor"></rect><rect x="4" y="3" width="1" height="1" fill="currentColor"></rect><rect x="5" y="3" width="1" height="1" fill="currentColor"></rect><rect x="2" y="4" width="1" height="1" fill="currentColor"></rect><rect x="3" y="4" width="1" height="1" fill="currentColor"></rect><rect x="4" y="4" width="1" height="1" fill="currentColor"></rect><rect x="1" y="5" width="1" height="1" fill="currentColor"></rect><rect x="2" y="5" width="1" height="1" fill="currentColor"></rect><rect x="3" y="5" width="1" height="1" fill="currentColor"></rect><rect x="0" y="6" width="1" height="1" fill="currentColor"></rect><rect x="1" y="6" width="1" height="1" fill="currentColor"></rect><rect x="2" y="6" width="1" height="1" fill="currentColor"></rect><rect x="0" y="7" width="1" height="1" fill="currentColor"></rect><rect x="1" y="7" width="1" height="1" fill="currentColor"></rect></svg>Écrire</button>
+  <button data-view="history"><svg width="20" height="14" viewBox="0 0 10 7" shape-rendering="crispEdges" aria-hidden="true"><rect x="1" y="0" width="1" height="1" fill="currentColor"></rect><rect x="2" y="0" width="1" height="1" fill="currentColor"></rect><rect x="3" y="0" width="1" height="1" fill="currentColor"></rect><rect x="6" y="0" width="1" height="1" fill="currentColor"></rect><rect x="7" y="0" width="1" height="1" fill="currentColor"></rect><rect x="8" y="0" width="1" height="1" fill="currentColor"></rect><rect x="0" y="1" width="1" height="1" fill="currentColor"></rect><rect x="4" y="1" width="1" height="1" fill="currentColor"></rect><rect x="5" y="1" width="1" height="1" fill="currentColor"></rect><rect x="9" y="1" width="1" height="1" fill="currentColor"></rect><rect x="0" y="2" width="1" height="1" fill="currentColor"></rect><rect x="4" y="2" width="1" height="1" fill="currentColor"></rect><rect x="5" y="2" width="1" height="1" fill="currentColor"></rect><rect x="9" y="2" width="1" height="1" fill="currentColor"></rect><rect x="0" y="3" width="1" height="1" fill="currentColor"></rect><rect x="4" y="3" width="1" height="1" fill="currentColor"></rect><rect x="5" y="3" width="1" height="1" fill="currentColor"></rect><rect x="9" y="3" width="1" height="1" fill="currentColor"></rect><rect x="0" y="4" width="1" height="1" fill="currentColor"></rect><rect x="4" y="4" width="1" height="1" fill="currentColor"></rect><rect x="5" y="4" width="1" height="1" fill="currentColor"></rect><rect x="9" y="4" width="1" height="1" fill="currentColor"></rect><rect x="0" y="5" width="1" height="1" fill="currentColor"></rect><rect x="4" y="5" width="1" height="1" fill="currentColor"></rect><rect x="5" y="5" width="1" height="1" fill="currentColor"></rect><rect x="9" y="5" width="1" height="1" fill="currentColor"></rect><rect x="1" y="6" width="1" height="1" fill="currentColor"></rect><rect x="2" y="6" width="1" height="1" fill="currentColor"></rect><rect x="3" y="6" width="1" height="1" fill="currentColor"></rect><rect x="6" y="6" width="1" height="1" fill="currentColor"></rect><rect x="7" y="6" width="1" height="1" fill="currentColor"></rect><rect x="8" y="6" width="1" height="1" fill="currentColor"></rect></svg>Archives</button>
+</nav>
+
+<script>
+(() => {
+  // =========================================================
+  //  À MODIFIER : l'adresse de ton Worker Cloudflare
+  // =========================================================
+  const API = "https://mon-journal.k8r2ng2mnk.workers.dev";
+
+  const CATS = ["Perso", "Famille", "Pro"];
+  const ICON = {"PERSO": "<svg class=\"ico\" width=\"30\" height=\"22\" viewBox=\"0 0 15 11\" shape-rendering=\"crispEdges\" aria-hidden=\"true\"><rect x=\"3\" y=\"0\" width=\"1\" height=\"1\" fill=\"#ff6fb5\"/><rect x=\"4\" y=\"0\" width=\"1\" height=\"1\" fill=\"#ff6fb5\"/><rect x=\"5\" y=\"0\" width=\"1\" height=\"1\" fill=\"#ff6fb5\"/><rect x=\"9\" y=\"0\" width=\"1\" height=\"1\" fill=\"#ff6fb5\"/><rect x=\"10\" y=\"0\" width=\"1\" height=\"1\" fill=\"#ff6fb5\"/><rect x=\"11\" y=\"0\" width=\"1\" height=\"1\" fill=\"#ff6fb5\"/><rect x=\"2\" y=\"1\" width=\"1\" height=\"1\" fill=\"#ff6fb5\"/><rect x=\"6\" y=\"1\" width=\"1\" height=\"1\" fill=\"#ff6fb5\"/><rect x=\"8\" y=\"1\" width=\"1\" height=\"1\" fill=\"#ff6fb5\"/><rect x=\"12\" y=\"1\" width=\"1\" height=\"1\" fill=\"#ff6fb5\"/><rect x=\"1\" y=\"2\" width=\"1\" height=\"1\" fill=\"#ff6fb5\"/><rect x=\"7\" y=\"2\" width=\"1\" height=\"1\" fill=\"#ff6fb5\"/><rect x=\"13\" y=\"2\" width=\"1\" height=\"1\" fill=\"#ff6fb5\"/><rect x=\"1\" y=\"3\" width=\"1\" height=\"1\" fill=\"#ff6fb5\"/><rect x=\"4\" y=\"3\" width=\"1\" height=\"1\" fill=\"#ffffff\"/><rect x=\"13\" y=\"3\" width=\"1\" height=\"1\" fill=\"#ff6fb5\"/><rect x=\"1\" y=\"4\" width=\"1\" height=\"1\" fill=\"#ff6fb5\"/><rect x=\"3\" y=\"4\" width=\"1\" height=\"1\" fill=\"#ffffff\"/><rect x=\"4\" y=\"4\" width=\"1\" height=\"1\" fill=\"#ffffff\"/><rect x=\"13\" y=\"4\" width=\"1\" height=\"1\" fill=\"#ff6fb5\"/><rect x=\"2\" y=\"5\" width=\"1\" height=\"1\" fill=\"#ff6fb5\"/><rect x=\"12\" y=\"5\" width=\"1\" height=\"1\" fill=\"#ff6fb5\"/><rect x=\"3\" y=\"6\" width=\"1\" height=\"1\" fill=\"#ff6fb5\"/><rect x=\"11\" y=\"6\" width=\"1\" height=\"1\" fill=\"#ff6fb5\"/><rect x=\"4\" y=\"7\" width=\"1\" height=\"1\" fill=\"#ff6fb5\"/><rect x=\"10\" y=\"7\" width=\"1\" height=\"1\" fill=\"#ff6fb5\"/><rect x=\"5\" y=\"8\" width=\"1\" height=\"1\" fill=\"#ff6fb5\"/><rect x=\"9\" y=\"8\" width=\"1\" height=\"1\" fill=\"#ff6fb5\"/><rect x=\"6\" y=\"9\" width=\"1\" height=\"1\" fill=\"#ff6fb5\"/><rect x=\"8\" y=\"9\" width=\"1\" height=\"1\" fill=\"#ff6fb5\"/><rect x=\"7\" y=\"10\" width=\"1\" height=\"1\" fill=\"#ff6fb5\"/></svg>", "FAMILLE": "<svg class=\"ico\" width=\"30\" height=\"26\" viewBox=\"0 0 15 13\" shape-rendering=\"crispEdges\" aria-hidden=\"true\"><rect x=\"7\" y=\"0\" width=\"1\" height=\"1\" fill=\"#ffe86b\"/><rect x=\"6\" y=\"1\" width=\"1\" height=\"1\" fill=\"#ffe86b\"/><rect x=\"8\" y=\"1\" width=\"1\" height=\"1\" fill=\"#ffe86b\"/><rect x=\"5\" y=\"2\" width=\"1\" height=\"1\" fill=\"#ffe86b\"/><rect x=\"9\" y=\"2\" width=\"1\" height=\"1\" fill=\"#ffe86b\"/><rect x=\"4\" y=\"3\" width=\"1\" height=\"1\" fill=\"#ffe86b\"/><rect x=\"10\" y=\"3\" width=\"1\" height=\"1\" fill=\"#ffe86b\"/><rect x=\"3\" y=\"4\" width=\"1\" height=\"1\" fill=\"#ffe86b\"/><rect x=\"11\" y=\"4\" width=\"1\" height=\"1\" fill=\"#ffe86b\"/><rect x=\"2\" y=\"5\" width=\"1\" height=\"1\" fill=\"#ffe86b\"/><rect x=\"12\" y=\"5\" width=\"1\" height=\"1\" fill=\"#ffe86b\"/><rect x=\"1\" y=\"6\" width=\"1\" height=\"1\" fill=\"#ffe86b\"/><rect x=\"2\" y=\"6\" width=\"1\" height=\"1\" fill=\"#ffe86b\"/><rect x=\"3\" y=\"6\" width=\"1\" height=\"1\" fill=\"#ffe86b\"/><rect x=\"11\" y=\"6\" width=\"1\" height=\"1\" fill=\"#ffe86b\"/><rect x=\"12\" y=\"6\" width=\"1\" height=\"1\" fill=\"#ffe86b\"/><rect x=\"13\" y=\"6\" width=\"1\" height=\"1\" fill=\"#ffe86b\"/><rect x=\"3\" y=\"7\" width=\"1\" height=\"1\" fill=\"#ffe86b\"/><rect x=\"11\" y=\"7\" width=\"1\" height=\"1\" fill=\"#ffe86b\"/><rect x=\"3\" y=\"8\" width=\"1\" height=\"1\" fill=\"#ffe86b\"/><rect x=\"5\" y=\"8\" width=\"1\" height=\"1\" fill=\"#ff6fb5\"/><rect x=\"6\" y=\"8\" width=\"1\" height=\"1\" fill=\"#ff6fb5\"/><rect x=\"8\" y=\"8\" width=\"1\" height=\"1\" fill=\"#ff6fb5\"/><rect x=\"9\" y=\"8\" width=\"1\" height=\"1\" fill=\"#ff6fb5\"/><rect x=\"11\" y=\"8\" width=\"1\" height=\"1\" fill=\"#ffe86b\"/><rect x=\"3\" y=\"9\" width=\"1\" height=\"1\" fill=\"#ffe86b\"/><rect x=\"5\" y=\"9\" width=\"1\" height=\"1\" fill=\"#ff6fb5\"/><rect x=\"6\" y=\"9\" width=\"1\" height=\"1\" fill=\"#ff6fb5\"/><rect x=\"7\" y=\"9\" width=\"1\" height=\"1\" fill=\"#ff6fb5\"/><rect x=\"8\" y=\"9\" width=\"1\" height=\"1\" fill=\"#ff6fb5\"/><rect x=\"9\" y=\"9\" width=\"1\" height=\"1\" fill=\"#ff6fb5\"/><rect x=\"11\" y=\"9\" width=\"1\" height=\"1\" fill=\"#ffe86b\"/><rect x=\"3\" y=\"10\" width=\"1\" height=\"1\" fill=\"#ffe86b\"/><rect x=\"6\" y=\"10\" width=\"1\" height=\"1\" fill=\"#ff6fb5\"/><rect x=\"7\" y=\"10\" width=\"1\" height=\"1\" fill=\"#ff6fb5\"/><rect x=\"8\" y=\"10\" width=\"1\" height=\"1\" fill=\"#ff6fb5\"/><rect x=\"11\" y=\"10\" width=\"1\" height=\"1\" fill=\"#ffe86b\"/><rect x=\"3\" y=\"11\" width=\"1\" height=\"1\" fill=\"#ffe86b\"/><rect x=\"7\" y=\"11\" width=\"1\" height=\"1\" fill=\"#ff6fb5\"/><rect x=\"11\" y=\"11\" width=\"1\" height=\"1\" fill=\"#ffe86b\"/><rect x=\"3\" y=\"12\" width=\"1\" height=\"1\" fill=\"#ffe86b\"/><rect x=\"4\" y=\"12\" width=\"1\" height=\"1\" fill=\"#ffe86b\"/><rect x=\"5\" y=\"12\" width=\"1\" height=\"1\" fill=\"#ffe86b\"/><rect x=\"6\" y=\"12\" width=\"1\" height=\"1\" fill=\"#ffe86b\"/><rect x=\"7\" y=\"12\" width=\"1\" height=\"1\" fill=\"#ffe86b\"/><rect x=\"8\" y=\"12\" width=\"1\" height=\"1\" fill=\"#ffe86b\"/><rect x=\"9\" y=\"12\" width=\"1\" height=\"1\" fill=\"#ffe86b\"/><rect x=\"10\" y=\"12\" width=\"1\" height=\"1\" fill=\"#ffe86b\"/><rect x=\"11\" y=\"12\" width=\"1\" height=\"1\" fill=\"#ffe86b\"/></svg>", "PRO": "<svg class=\"ico\" width=\"30\" height=\"20\" viewBox=\"0 0 15 10\" shape-rendering=\"crispEdges\" aria-hidden=\"true\"><rect x=\"5\" y=\"0\" width=\"1\" height=\"1\" fill=\"#7ff3ff\"/><rect x=\"6\" y=\"0\" width=\"1\" height=\"1\" fill=\"#7ff3ff\"/><rect x=\"7\" y=\"0\" width=\"1\" height=\"1\" fill=\"#7ff3ff\"/><rect x=\"8\" y=\"0\" width=\"1\" height=\"1\" fill=\"#7ff3ff\"/><rect x=\"9\" y=\"0\" width=\"1\" height=\"1\" fill=\"#7ff3ff\"/><rect x=\"5\" y=\"1\" width=\"1\" height=\"1\" fill=\"#7ff3ff\"/><rect x=\"9\" y=\"1\" width=\"1\" height=\"1\" fill=\"#7ff3ff\"/><rect x=\"1\" y=\"2\" width=\"1\" height=\"1\" fill=\"#7ff3ff\"/><rect x=\"2\" y=\"2\" width=\"1\" height=\"1\" fill=\"#7ff3ff\"/><rect x=\"3\" y=\"2\" width=\"1\" height=\"1\" fill=\"#7ff3ff\"/><rect x=\"4\" y=\"2\" width=\"1\" height=\"1\" fill=\"#7ff3ff\"/><rect x=\"5\" y=\"2\" width=\"1\" height=\"1\" fill=\"#7ff3ff\"/><rect x=\"6\" y=\"2\" width=\"1\" height=\"1\" fill=\"#7ff3ff\"/><rect x=\"7\" y=\"2\" width=\"1\" height=\"1\" fill=\"#7ff3ff\"/><rect x=\"8\" y=\"2\" width=\"1\" height=\"1\" fill=\"#7ff3ff\"/><rect x=\"9\" y=\"2\" width=\"1\" height=\"1\" fill=\"#7ff3ff\"/><rect x=\"10\" y=\"2\" width=\"1\" height=\"1\" fill=\"#7ff3ff\"/><rect x=\"11\" y=\"2\" width=\"1\" height=\"1\" fill=\"#7ff3ff\"/><rect x=\"12\" y=\"2\" width=\"1\" height=\"1\" fill=\"#7ff3ff\"/><rect x=\"13\" y=\"2\" width=\"1\" height=\"1\" fill=\"#7ff3ff\"/><rect x=\"1\" y=\"3\" width=\"1\" height=\"1\" fill=\"#7ff3ff\"/><rect x=\"13\" y=\"3\" width=\"1\" height=\"1\" fill=\"#7ff3ff\"/><rect x=\"1\" y=\"4\" width=\"1\" height=\"1\" fill=\"#7ff3ff\"/><rect x=\"13\" y=\"4\" width=\"1\" height=\"1\" fill=\"#7ff3ff\"/><rect x=\"1\" y=\"5\" width=\"1\" height=\"1\" fill=\"#7ff3ff\"/><rect x=\"2\" y=\"5\" width=\"1\" height=\"1\" fill=\"#7ff3ff\"/><rect x=\"3\" y=\"5\" width=\"1\" height=\"1\" fill=\"#7ff3ff\"/><rect x=\"4\" y=\"5\" width=\"1\" height=\"1\" fill=\"#7ff3ff\"/><rect x=\"5\" y=\"5\" width=\"1\" height=\"1\" fill=\"#7ff3ff\"/><rect x=\"6\" y=\"5\" width=\"1\" height=\"1\" fill=\"#7ff3ff\"/><rect x=\"7\" y=\"5\" width=\"1\" height=\"1\" fill=\"#ffffff\"/><rect x=\"8\" y=\"5\" width=\"1\" height=\"1\" fill=\"#7ff3ff\"/><rect x=\"9\" y=\"5\" width=\"1\" height=\"1\" fill=\"#7ff3ff\"/><rect x=\"10\" y=\"5\" width=\"1\" height=\"1\" fill=\"#7ff3ff\"/><rect x=\"11\" y=\"5\" width=\"1\" height=\"1\" fill=\"#7ff3ff\"/><rect x=\"12\" y=\"5\" width=\"1\" height=\"1\" fill=\"#7ff3ff\"/><rect x=\"13\" y=\"5\" width=\"1\" height=\"1\" fill=\"#7ff3ff\"/><rect x=\"1\" y=\"6\" width=\"1\" height=\"1\" fill=\"#7ff3ff\"/><rect x=\"7\" y=\"6\" width=\"1\" height=\"1\" fill=\"#ffffff\"/><rect x=\"13\" y=\"6\" width=\"1\" height=\"1\" fill=\"#7ff3ff\"/><rect x=\"1\" y=\"7\" width=\"1\" height=\"1\" fill=\"#7ff3ff\"/><rect x=\"13\" y=\"7\" width=\"1\" height=\"1\" fill=\"#7ff3ff\"/><rect x=\"1\" y=\"8\" width=\"1\" height=\"1\" fill=\"#7ff3ff\"/><rect x=\"13\" y=\"8\" width=\"1\" height=\"1\" fill=\"#7ff3ff\"/><rect x=\"1\" y=\"9\" width=\"1\" height=\"1\" fill=\"#7ff3ff\"/><rect x=\"2\" y=\"9\" width=\"1\" height=\"1\" fill=\"#7ff3ff\"/><rect x=\"3\" y=\"9\" width=\"1\" height=\"1\" fill=\"#7ff3ff\"/><rect x=\"4\" y=\"9\" width=\"1\" height=\"1\" fill=\"#7ff3ff\"/><rect x=\"5\" y=\"9\" width=\"1\" height=\"1\" fill=\"#7ff3ff\"/><rect x=\"6\" y=\"9\" width=\"1\" height=\"1\" fill=\"#7ff3ff\"/><rect x=\"7\" y=\"9\" width=\"1\" height=\"1\" fill=\"#7ff3ff\"/><rect x=\"8\" y=\"9\" width=\"1\" height=\"1\" fill=\"#7ff3ff\"/><rect x=\"9\" y=\"9\" width=\"1\" height=\"1\" fill=\"#7ff3ff\"/><rect x=\"10\" y=\"9\" width=\"1\" height=\"1\" fill=\"#7ff3ff\"/><rect x=\"11\" y=\"9\" width=\"1\" height=\"1\" fill=\"#7ff3ff\"/><rect x=\"12\" y=\"9\" width=\"1\" height=\"1\" fill=\"#7ff3ff\"/><rect x=\"13\" y=\"9\" width=\"1\" height=\"1\" fill=\"#7ff3ff\"/></svg>"};
+  const TRASH = "<svg width=\"14\" height=\"16\" viewBox=\"0 0 7 8\" shape-rendering=\"crispEdges\" aria-hidden=\"true\"><rect x=\"2\" y=\"0\" width=\"3\" height=\"1\" fill=\"currentColor\"/><rect x=\"0\" y=\"1\" width=\"7\" height=\"1\" fill=\"currentColor\"/><rect x=\"1\" y=\"2\" width=\"1\" height=\"6\" fill=\"currentColor\"/><rect x=\"5\" y=\"2\" width=\"1\" height=\"6\" fill=\"currentColor\"/><rect x=\"1\" y=\"7\" width=\"5\" height=\"1\" fill=\"currentColor\"/><rect x=\"3\" y=\"3\" width=\"1\" height=\"3\" fill=\"currentColor\"/></svg>";
+  const EXCERPT_MAX = 1900;
+  const BUBBLES = [
+    "Connexion établie. Qu'est-ce que tu veux sauvegarder ?",
+    "Signal reçu. Une idée à stocker avant qu'elle s'envole ?",
+    "Mémoire disponible : illimitée. Vas-y, je t'écoute.",
+    "Bip bip. Un truc cool est arrivé aujourd'hui ?",
+    "Il pleut dehors, parfait pour écrire un peu."
+  ];
+
+  const $ = s => document.querySelector(s);
+  const text = $("#text");
+  const store = {
+    get(k){ try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
+    set(k,v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+    del(k){ try { localStorage.removeItem(k); } catch {} }
+  };
+  let code = store.get("journal.code") || "";
+  let notes = store.get("journal.cache") || [];
+  let lastSync = store.get("journal.cacheAt");
+  let filter = "Tout", query = "", tagFilter = "", loading = false, loadedOnce = false, tagsOn = true;
+  const tagging = new Set();
+
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  $("#today").textContent = new Date().toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"});
+  $("#bubble").textContent = BUBBLES[new Date().getDate() % BUBBLES.length];
+
+  // ---------- Appels au relais ----------
+  class ApiError extends Error { constructor(status, code, message){ super(message); this.status = status; this.code = code; } }
+  async function api(method, path, body){
+    let r;
+    try {
+      r = await fetch(API + path, {
+        method,
+        headers: { "Content-Type": "application/json", "X-App-Code": code },
+        body: body ? JSON.stringify(body) : undefined
+      });
+    } catch { throw new ApiError(0, "network", "Pas de connexion au relais. Vérifie ton réseau."); }
+    const data = await r.json().catch(() => ({}));
+    if (r.status === 401) { lock("Code incorrect, réessaie."); throw new ApiError(401, "code", "Code d'accès incorrect."); }
+    if (!r.ok) throw new ApiError(r.status, data.error || "error", data.message || ("Erreur " + r.status));
+    return data;
+  }
+  function explain(err){
+    if (!err) return "Un souci est survenu. Réessaie dans un instant.";
+    if (err.code === "network") return err.message;
+    if (err.code === "config") return "Le relais n'est pas configuré : vérifie NOTION_TOKEN et APP_CODE dans Cloudflare.";
+    if (String(err.code).startsWith("notion_")) return err.message + (err.status === 404 ? " (as-tu bien connecté la base Notion à ta connexion ?)" : "");
+    return err.message || "Un souci est survenu.";
+  }
+
+  // ---------- Écran de code ----------
+  function lock(msg){
+    store.del("journal.code"); code = "";
+    $("#lock").classList.add("on");
+    $("#lockMsg").textContent = msg || "";
+    setTimeout(() => $("#codeInput").focus(), 50);
+  }
+  $("#lockForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const v = $("#codeInput").value.trim(); if (!v) return;
+    code = v; $("#lockMsg").textContent = "Connexion…";
+    try {
+      const r = await api("GET", "/ping");
+      tagsOn = !!r.tags;
+      store.set("journal.code", code);
+      $("#lock").classList.remove("on"); $("#codeInput").value = "";
+      load(true);
+    } catch (err) { if (err.status !== 401) $("#lockMsg").textContent = explain(err); }
+  });
+
+  // ---------- Brouillon ----------
+  text.value = store.get("journal.draft") || "";
+  const updateCount = () => {
+    const n = text.value.trim() ? text.value.trim().split(/\s+/).length : 0;
+    $("#count").textContent = n ? n + (n > 1 ? " mots" : " mot") + " · brouillon gardé" : "Brouillon gardé automatiquement";
+  };
+  text.addEventListener("input", () => { store.set("journal.draft", text.value); updateCount(); });
+  updateCount();
+
+  // ---------- Navigation ----------
+  function show(view){
+    document.querySelectorAll("nav button").forEach(b => b.classList.toggle("sel", b.dataset.view === view));
+    $("#v-write").classList.toggle("on", view === "write");
+    $("#v-history").classList.toggle("on", view === "history");
+    document.body.classList.toggle("hist", view === "history");
+    $("#title").textContent = view === "write" ? "Mon Journal" : "Archives";
+    if (view === "history") { render(); if (!loadedOnce) load(); }
+    if (location.hash !== "#" + view) history.replaceState(null, "", "#" + view);
+    window.scrollTo(0, 0);
+  }
+  document.querySelectorAll("nav button").forEach(b => b.addEventListener("click", () => show(b.dataset.view)));
+  window.addEventListener("hashchange", () => show(location.hash === "#history" ? "history" : "write"));
+
+  // ---------- Messages ----------
+  let toastT, miniT;
+  function toast(html){ const t=$("#toast"); t.innerHTML=html; t.classList.remove("on"); void t.offsetWidth; t.classList.add("on"); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("on"),2200); }
+  function mini(html){ const m=$("#mini"); m.innerHTML=html; m.classList.remove("on"); void m.offsetWidth; m.classList.add("on"); clearTimeout(miniT); miniT=setTimeout(()=>m.classList.remove("on"),3200); }
+  function banner(msg){ const b=$("#banner"); b.innerHTML = msg || ""; b.classList.toggle("on", !!msg); }
+
+  // ---------- Série de jours ----------
+  function dayKey(d){ return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate(); }
+  function updateStreak(){
+    const days = new Set(notes.map(n => { const d = new Date(n.date); return isNaN(d) ? null : dayKey(d); }).filter(Boolean));
+    const d = new Date(); let n = 0;
+    if (!days.has(dayKey(d))) d.setDate(d.getDate() - 1);
+    while (days.has(dayKey(d))) { n++; d.setDate(d.getDate() - 1); }
+    $("#streak").classList.toggle("on", n > 0);
+    $("#streakN").textContent = n + (n > 1 ? " jours" : " jour");
+  }
+
+  // ---------- Hashtags ----------
+  function knownTags(){
+    const c = {}; notes.forEach(n => (n.tags || []).forEach(t => c[t] = (c[t] || 0) + 1));
+    return Object.keys(c).sort((a, b) => c[b] - c[a]);
+  }
+  async function autoTag(note, body, cat){
+    if (!tagsOn || !note.id) return;
+    tagging.add(note.id); render();
+    try {
+      const r = await api("POST", "/notes/" + note.id + "/tags", { text: body, cat, existing: knownTags().slice(0, 40) });
+      if (r.disabled) { tagsOn = false; return; }
+      if (r.tags && r.tags.length) {
+        note.tags = r.tags; note.fresh = true;
+        store.set("journal.cache", notes);
+        mini(r.tags.map(x => "#" + esc(x)).join(" ") + " ✓");
+      }
+    } catch { mini("Hashtags non ajoutés cette fois-ci"); }
+    finally { tagging.delete(note.id); render(); }
+  }
+
+  // ---------- Enregistrer ----------
+  async function save(cat, btn){
+    const body = text.value.trim();
+    if (!body) { toast("<span>Écris quelque chose d'abord</span>"); text.focus(); return; }
+    if (!code) { lock(); return; }
+    document.querySelectorAll(".cat").forEach(b => b.disabled = true);
+    btn.classList.add("saving");
+    try {
+      const r = await api("POST", "/notes", { text: body, cat });
+      const note = Object.assign(r.note || {}, { full: body, tags: [] });
+      if (!note.excerpt) note.excerpt = body.slice(0, EXCERPT_MAX);
+      if (!note.title) note.title = body.split("\n")[0].slice(0, 60);
+      notes.unshift(note);
+      store.set("journal.cache", notes);
+      text.value = ""; store.set("journal.draft", ""); updateCount(); updateStreak();
+      banner("");
+      toast('<span style="color:' + ({Perso:"#ff6fb5",Famille:"#ffe86b",Pro:"#7ff3ff"})[cat] + '">' + ICON[cat.toUpperCase()] + "</span><span>Note rangée dans " + cat + " !</span>"
+        + (tagsOn ? '<span style="font-size:12px;color:#ffe86b">Claude cherche tes hashtags…</span>' : ""));
+      autoTag(note, body, cat);
+    } catch (err) {
+      if (err.status !== 401) banner(esc(explain(err)) + (err.code === "network" || err.status >= 500 ? "<br>Vérifie dans Notion que la note n'a pas déjà été créée avant de réessayer." : ""));
+    } finally {
+      btn.classList.remove("saving");
+      document.querySelectorAll(".cat").forEach(b => b.disabled = false);
+    }
+  }
+  document.querySelectorAll(".cat").forEach(b => b.addEventListener("click", () => save(b.dataset.cat, b)));
+
+  // ---------- Charger ----------
+  async function load(force){
+    if (!code || loading) return;
+    if (!force && lastSync && Date.now() - lastSync < 60000 && loadedOnce) return render();
+    loading = true; render();
+    try {
+      const r = await api("GET", "/notes");
+      notes = (r.notes || []).sort((a, b) => (Date.parse(b.date) || 0) - (Date.parse(a.date) || 0));
+      lastSync = Date.now();
+      store.set("journal.cache", notes); store.set("journal.cacheAt", lastSync);
+      loadedOnce = true; banner(""); updateStreak();
+    } catch (err) {
+      if (err.status !== 401) {
+        banner(esc(explain(err)) + ' <button class="btn" id="retry">Réessayer</button>');
+        const b = $("#retry"); if (b) b.onclick = () => load(true);
+      }
+    } finally { loading = false; render(); }
+  }
+
+  async function expand(note, el){
+    if (el.classList.toggle("open") === false) return;
+    if (note.full || !note.id || (note.excerpt || "").length < EXCERPT_MAX) return;
+    try {
+      const r = await api("GET", "/notes/" + note.id);
+      if (r.text) { note.full = r.text; el.querySelector(".text").textContent = note.full; }
+    } catch {}
+  }
+
+  async function removeNote(note, el, btn){
+    if (!note || !note.id) return;
+    btn.disabled = true; btn.textContent = "Suppression…";
+    try {
+      await api("DELETE", "/notes/" + note.id);
+      el.classList.add("gone");
+      setTimeout(() => { notes = notes.filter(n => n !== note); store.set("journal.cache", notes); updateStreak(); render(); }, 480);
+      mini("Note envoyée à la corbeille Notion");
+    } catch (err) {
+      btn.disabled = false; btn.textContent = "Oui, supprimer";
+      if (err.status !== 401) mini(esc(explain(err)).slice(0, 160));
+    }
+  }
+
+  // ---------- Archives ----------
+  function fmtDate(iso){
+    const d = new Date(iso); if (isNaN(d)) return "";
+    const hasTime = /T\d/.test(iso);
+    return d.toLocaleDateString("fr-FR",{weekday:"short",day:"numeric",month:"short"}) + (hasTime ? " · " + d.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"}) : "");
+  }
+  function setTag(x){ tagFilter = (x === tagFilter) ? "" : x; render(); window.scrollTo({ top: 0, behavior: "smooth" }); }
+  function render(){
+    const counts = { Tout: notes.length }; CATS.forEach(c => counts[c] = notes.filter(n => n.cat === c).length);
+    $("#chips").innerHTML = ["Tout", ...CATS].map(c => `<button class="chip ${c.toUpperCase()} ${filter===c?"sel":""}" data-f="${c}">${c}<span class="n">${counts[c]}</span></button>`).join("");
+    $("#chips").querySelectorAll(".chip").forEach(b => b.onclick = () => { filter = b.dataset.f; render(); });
+    const top = knownTags().slice(0, 12);
+    $("#cloud").innerHTML = top.length ? `<span class="cloud-label">Hashtags</span>` + top.map(x => `<button class="tag ${x===tagFilter?"on":""}" data-tag="${esc(x)}">#${esc(x)}</button>`).join("") : "";
+    $("#cloud").querySelectorAll(".tag").forEach(b => b.onclick = () => setTag(b.dataset.tag));
+    const at = $("#activeTag");
+    at.classList.toggle("on", !!tagFilter);
+    at.innerHTML = tagFilter ? `Filtré sur <button class="tag on" id="clearTag">#${esc(tagFilter)} ✕</button>` : "";
+    const ct = $("#clearTag"); if (ct) ct.onclick = () => setTag("");
+    $("#fresh").textContent = loading ? "Synchronisation…" : (lastSync ? "Synchro " + new Date(lastSync).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"}) + " · actualiser ↻" : "");
+    if (!notes.length) {
+      $("#list").innerHTML = `<div class="state">${loading ? "Chargement des archives…" : "Aucune note pour l'instant.<br>Écris ta première dans l'onglet Écrire."}</div>`;
+      return;
+    }
+    const q = query.trim().toLowerCase();
+    const shown = notes.filter(n => (filter === "Tout" || n.cat === filter) && (!tagFilter || (n.tags || []).includes(tagFilter))
+      && (!q || (n.title + " " + n.excerpt + " " + (n.tags || []).map(x => "#" + x).join(" ")).toLowerCase().includes(q)));
+    if (!shown.length) { $("#list").innerHTML = `<div class="state">Rien ne correspond à ta recherche.</div>`; return; }
+    let html = "", month = "";
+    shown.forEach((n, i) => {
+      const d = new Date(n.date);
+      const m = isNaN(d) ? "" : d.toLocaleDateString("fr-FR",{month:"long",year:"numeric"});
+      if (m !== month) { month = m; html += `<div class="month">${esc(m)}</div>`; }
+      const C = (n.cat || "").toUpperCase();
+      html += `<article class="card ${CATS.includes(n.cat) ? C : ""}" data-i="${notes.indexOf(n)}" style="animation-delay:${Math.min(i,8)*70}ms">
+        ${ICON[C] || ""}
+        <div class="card-body">
+          <div class="meta">${esc(n.cat || "Sans catégorie")} · ${esc(fmtDate(n.date))}</div>
+          <p class="text">${esc(n.full || n.excerpt || n.title)}</p>
+          ${(n.tags && n.tags.length) ? `<div class="tags">${n.tags.map(x => `<button class="tag ${x===tagFilter?"on":""} ${n.fresh?"new":""}" data-tag="${esc(x)}">#${esc(x)}</button>`).join("")}</div>` : ""}
+          ${tagging.has(n.id) ? `<span class="tagging"><i></i>Claude tague cette note…</span>` : ""}
+          <div class="actions">${n.url ? `<a class="link" href="${esc(n.url)}" target="_blank" rel="noopener">Ouvrir dans Notion ↗</a>` : ""}<button class="del" type="button">${TRASH}Supprimer</button></div>
+          <div class="confirm">Supprimer cette note ? Elle part dans la corbeille de Notion, d'où tu pourras encore la récupérer.
+            <div class="row"><button class="no" type="button">Annuler</button><button class="yes" type="button">Oui, supprimer</button></div></div>
+        </div>
+      </article>`;
+    });
+    $("#list").innerHTML = html;
+    $("#list").querySelectorAll(".card").forEach(el => el.addEventListener("click", e => {
+      const note = notes[+el.dataset.i];
+      if (e.target.closest(".del")) { el.classList.add("asking"); return; }
+      if (e.target.closest(".no")) { el.classList.remove("asking"); return; }
+      if (e.target.closest(".yes")) { removeNote(note, el, e.target.closest(".yes")); return; }
+      if (e.target.closest(".confirm")) return;
+      const tg = e.target.closest(".tag");
+      if (tg) { setTag(tg.dataset.tag); return; }
+      if (!e.target.closest("a")) expand(note, el);
+    }));
+    notes.forEach(n => n.fresh = false);
+  }
+  $("#search").addEventListener("input", e => { query = e.target.value; render(); });
+  $("#fresh").addEventListener("click", () => load(true));
+
+  // Recharger en revenant sur l'app (ex. après avoir écrit sur l'ordi)
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && code) load(); });
+
+  // ---------- Démarrage ----------
+  updateStreak();
+  show(location.hash === "#history" ? "history" : "write");
+  if (!code) lock(); else load(true);
+})();
+
+</script>
+</body>
+</html>
