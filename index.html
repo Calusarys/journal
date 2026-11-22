@@ -358,7 +358,7 @@
     tagging.add(note.id); render();
     try {
       const r = await api("POST", "/notes/" + note.id + "/tags", { text: body, cat, existing: knownTags().slice(0, 40) });
-      if (r.disabled) { tagsOn = false; return; }
+      if (r.disabled) return;
       if (r.tags && r.tags.length) {
         note.tags = r.tags; note.fresh = true;
         store.set("journal.cache", notes);
@@ -385,7 +385,7 @@
       text.value = ""; store.set("journal.draft", ""); updateCount(); updateStreak();
       banner("");
       toast('<span style="color:' + ({Perso:"#ff6fb5",Famille:"#ffe86b",Pro:"#7ff3ff"})[cat] + '">' + ICON[cat.toUpperCase()] + "</span><span>Note rangée dans " + cat + " !</span>"
-        + (tagsOn ? '<span style="font-size:12px;color:#ffe86b">Claude cherche tes hashtags…</span>' : ""));
+        + (tagsOn ? '<span style="font-size:12px;color:#ffe86b">Recherche de hashtags…</span>' : ""));
       autoTag(note, body, cat);
     } catch (err) {
       if (err.status !== 401) banner(esc(explain(err)) + (err.code === "network" || err.status >= 500 ? "<br>Vérifie dans Notion que la note n'a pas déjà été créée avant de réessayer." : ""));
@@ -477,7 +477,7 @@
           <div class="meta">${esc(n.cat || "Sans catégorie")} · ${esc(fmtDate(n.date))}</div>
           <p class="text">${esc(n.full || n.excerpt || n.title)}</p>
           ${(n.tags && n.tags.length) ? `<div class="tags">${n.tags.map(x => `<button class="tag ${x===tagFilter?"on":""} ${n.fresh?"new":""}" data-tag="${esc(x)}">#${esc(x)}</button>`).join("")}</div>` : ""}
-          ${tagging.has(n.id) ? `<span class="tagging"><i></i>Claude tague cette note…</span>` : ""}
+          ${tagging.has(n.id) ? `<span class="tagging"><i></i>Hashtags en cours…</span>` : ""}
           <div class="actions">${n.url ? `<a class="link" href="${esc(n.url)}" target="_blank" rel="noopener">Ouvrir dans Notion ↗</a>` : ""}<button class="del" type="button">${TRASH}Supprimer</button></div>
           <div class="confirm">Supprimer cette note ? Elle part dans la corbeille de Notion, d'où tu pourras encore la récupérer.
             <div class="row"><button class="no" type="button">Annuler</button><button class="yes" type="button">Oui, supprimer</button></div></div>
@@ -501,12 +501,13 @@
   $("#fresh").addEventListener("click", () => load(true));
 
   // Recharger en revenant sur l'app (ex. après avoir écrit sur l'ordi)
-  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && code) load(); });
+  async function refreshTagsFlag(){ if (!code) return; try { const r = await api("GET", "/ping"); tagsOn = !!r.tags; } catch {} }
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && code) { refreshTagsFlag(); load(); } });
 
   // ---------- Démarrage ----------
   updateStreak();
   show(location.hash === "#history" ? "history" : "write");
-  if (!code) lock(); else load(true);
+  if (!code) lock(); else { refreshTagsFlag(); load(true); }
 })();
 
 </script>
